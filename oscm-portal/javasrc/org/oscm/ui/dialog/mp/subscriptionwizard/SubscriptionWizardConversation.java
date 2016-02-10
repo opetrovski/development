@@ -599,10 +599,10 @@ public class SubscriptionWizardConversation implements Serializable {
     }
 
     public String previousFromPayment() {
+        model.setReadOnlyParams(false);
         return SubscriptionDetailsCtrlConstants.OUTCOME_PREVIOUS;
     }
 
-    // TODO: redirection doesn't work. Nicht funktionieren:)
     private void redirectToAccessDeniedPage() throws IllegalArgumentException,
             IOException {
         HttpServletRequest request = JSFUtils.getRequest();
