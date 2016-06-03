@@ -61,7 +61,7 @@ public class RestoreActions extends Actions {
                     .revertToSnapshotTask(snapshot, targetHost,
                             suppressPowerOn);
 
-            ph.setTask(client.retrieveTaskInfoKey(task));
+            ph.setTask(client.retrieveTaskInfo(task));
             return EVENT_RUN;
         } catch (Exception e) {
             String message = "Failed to restore snapshot for instance "

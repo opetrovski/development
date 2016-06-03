@@ -147,7 +147,7 @@ public class VMController implements APPlatformController {
             validateParameters(currentParameters, newParameters,
                     currentSettings.getOrganizationId(), instanceId);
 
-            newParameters.setTask("");
+            newParameters.setTask(null);
             newParameters.setRequestingUser(newSettings.getRequestingUser());
             newParameters.setImportOfExistingVM(false);
 

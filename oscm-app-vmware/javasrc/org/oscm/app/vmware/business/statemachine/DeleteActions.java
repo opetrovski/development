@@ -86,7 +86,7 @@ public class DeleteActions extends Actions {
                     .borrowObject(vcenter);
             VM vm = new VM(vmClient, ph.getInstanceName());
             TaskInfo taskInfo = vm.delete();
-            ph.setTask(taskInfo.getKey());
+            ph.setTask(taskInfo);
             return EVENT_DELETING;
         } catch (Exception e) {
             logger.error("Failed to delete VM for instance " + instanceId, e);

@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import org.oscm.app.v1_0.data.PasswordAuthentication;
 import org.oscm.app.v1_0.data.ProvisioningSettings;
 import org.oscm.app.v1_0.data.ServiceUser;
@@ -29,6 +31,10 @@ import org.oscm.app.vmware.persistence.VMwareNetwork;
 import org.oscm.app.vmware.remote.bes.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vmware.vim25.LocalizableMessage;
+import com.vmware.vim25.TaskInfo;
+import com.vmware.vim25.TaskInfoState;
 
 /**
  * Class to read and return the VMware specific properties.
@@ -940,10 +946,52 @@ public class VMPropertyHandler {
     /**
      * Updates the key of the last created task.
      */
-    public void setTask(String key) {
-        settings.getParameters().put(TASK_KEY, key);
-        settings.getParameters().put(TASK_STARTTIME,
-                Long.toString(System.currentTimeMillis()));
+    public void setTask(TaskInfo info) {
+        if (info != null) {
+            settings.getParameters().put(TASK_KEY, info.getKey());
+        } else {
+            settings.getParameters().put(TASK_KEY, "");
+        }
+        settings.getParameters().put(TASK_STARTTIME, Long.toString(System.currentTimeMillis()));
+        logTaskInfo(info);
+    }
+
+    private void logTaskInfo(TaskInfo info) {
+        if (info == null) {
+            logger.debug("Deleted task info key");
+            return;
+        }
+
+        TaskInfoState state = info.getState();
+
+        Integer progress = info.getProgress();
+        if (state == TaskInfoState.SUCCESS) {
+            progress = Integer.valueOf(100);
+        } else if (progress == null) {
+            progress = Integer.valueOf(0);
+        }
+
+        LocalizableMessage desc = info.getDescription();
+        String description = desc != null ? desc.getMessage() : "";
+
+        XMLGregorianCalendar queueT = info.getQueueTime();
+        String queueTime = queueT != null
+                ? queueT.toGregorianCalendar().getTime().toString() : "";
+
+        XMLGregorianCalendar startT = info.getStartTime();
+        String startTime = startT != null
+                ? startT.toGregorianCalendar().getTime().toString() : "";
+
+        XMLGregorianCalendar completeT = info.getCompleteTime();
+        String completeTime = completeT != null
+                ? completeT.toGregorianCalendar().getTime().toString() : "";
+
+        logger.debug("Save task info key: " + info.getKey() + " name: "
+                + info.getName() + " target: " + info.getEntityName()
+                + " state: " + state.name() + " progress: " + progress
+                + "% description: " + description + " queue-time: " + queueTime
+                + " start-time: " + startTime + " complete-time: "
+                + completeTime);
     }
 
     /**
