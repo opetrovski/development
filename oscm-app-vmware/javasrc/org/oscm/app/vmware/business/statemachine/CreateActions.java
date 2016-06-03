@@ -75,7 +75,7 @@ public class CreateActions extends Actions {
                     .borrowObject(vcenter);
             VM template = new VM(vmClient, ph.getTemplateName());
             TaskInfo taskInfo = template.cloneVM(ph);
-            ph.setTask(taskInfo.getKey());
+            ph.setTask(taskInfo);
             return EVENT_CREATING;
         } catch (Exception e) {
             logger.error("Failed to create VM of instance " + instanceId, e);
