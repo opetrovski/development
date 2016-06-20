@@ -10,6 +10,8 @@ package org.oscm.app.vmware.business;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.oscm.app.v1_0.exceptions.APPlatformException;
 import org.oscm.app.vmware.business.Script.OS;
@@ -44,6 +46,10 @@ public class VM extends Template {
     private ManagedObjectReference folder;
     private GuestInfo guestInfo;
     private String instanceName;
+
+    public VM() {
+
+    }
 
     public VM(VMwareClient vmw, String instanceName) throws Exception {
         this.vmw = vmw;
@@ -263,16 +269,36 @@ public class VM extends Template {
     }
 
     public TaskInfo updateCommentField(String comment) throws Exception {
-        LOG.debug("instanceName: " + instanceName + " comment: " + comment);
         VimPortType service = vmw.getConnection().getService();
         VirtualMachineConfigSpec vmConfigSpec = new VirtualMachineConfigSpec();
+
+        String annotation = vmConfigSpec.getAnnotation();
+        comment = updateComment(comment, annotation);
         vmConfigSpec.setAnnotation(comment);
         LOG.debug("Call vSphere API: reconfigVMTask()");
         ManagedObjectReference reconfigureTask = service
                 .reconfigVMTask(vmInstance, vmConfigSpec);
-
         return (TaskInfo) vmw.getServiceUtil()
                 .getDynamicProperty(reconfigureTask, "info");
+    }
+
+    String updateComment(String comment, String annotation) {
+        if (annotation == null) {
+            annotation = "";
+        }
+        Pattern pattern = Pattern.compile(
+                ".*" + "CT-MG \\{" + "[\\r\\n]+(.*?)[\\r\\n]+" + "\\}" + ".*",
+                Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(annotation);
+        if (matcher.find()) {
+            return annotation.replace(matcher.group(1), comment);
+        }
+
+        if (annotation.trim().length() == 0) {
+            return "CT-MG {\n".concat(comment).concat("\n}");
+        }
+        return annotation.concat("\n").concat("CT-MG {\n").concat(comment)
+                .concat("\n}");
     }
 
     /**
