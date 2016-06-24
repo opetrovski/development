@@ -245,6 +245,10 @@ public class VMPropertyHandler {
     public static final String TS_DATA_DISK_SIZE = "DATA_DISK_SIZE_#";
 
     /**
+     * Datastore of custom data disk (optional).
+     */
+    public static final String TS_DATA_DISK_STORAGE =  "DATA_DISK_STORAGE_#";;
+    /**
      * Target location for the data disk, e.g. /home/user/data for Linux VM or
      * d: for Windows VM.
      */
@@ -406,6 +410,7 @@ public class VMPropertyHandler {
     public static final String SM_STATE_HISTORY = "SM_STATE_HISTORY";
     public static final String SM_STATE_MACHINE = "SM_STATE_MACHINE";
     public static final String SM_ERROR_MESSAGE = "SM_ERROR_MESSAGE";
+
 
     public VMPropertyHandler(ProvisioningSettings settings) {
         this.settings = settings;
@@ -658,6 +663,20 @@ public class VMPropertyHandler {
     }
 
     /**
+     * Returns the list of storage names for additionally defined data disks .
+     *
+     * @return a list of String values for all defined data disks
+     */
+    public String getDataDisksStorageName(int index) {
+            String diskPrefix = TS_DATA_DISK_STORAGE.replace("#",
+                    Integer.toString(index));
+            String result = getServiceSetting(diskPrefix);
+            logger.debug("retrieve name for disk "+index+" value: "+result);
+            return result;
+     }
+
+    
+    /**
      * Returns the list of additionally defined data disks as comparable string.
      *
      * @return a string with all defined data disks
@@ -681,6 +700,7 @@ public class VMPropertyHandler {
         return (val != null && val.length() > 0) ? Integer.parseInt(val) : 0;
     }
 
+    
     /**
      * Saves the key of a custom virtual disk. Internal mapping of index to
      * VMware device key.
@@ -1564,4 +1584,5 @@ public class VMPropertyHandler {
             return new DataAccessService(getLocale());
         }
     }
+
 }
