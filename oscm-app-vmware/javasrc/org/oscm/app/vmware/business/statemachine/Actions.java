@@ -236,6 +236,43 @@ public class Actions {
             }
         }
     }
+    @StateMachineAction
+    public String checkVMStopped(String instanceId,
+            ProvisioningSettings settings,
+            @SuppressWarnings("unused") InstanceStatus result) {
+
+        String instanceName = "";
+        VMPropertyHandler ph = new VMPropertyHandler(settings);
+        String vcenter = ph
+                .getServiceSetting(VMPropertyHandler.TS_TARGET_VCENTER_SERVER);
+        VMwareClient vmClient = null;
+        try {
+            vmClient = VMClientPool.getInstance().getPool()
+                    .borrowObject(vcenter);
+            instanceName = ph.getInstanceName();
+            VM vm = new VM(vmClient, instanceName);
+  
+            return vm.isStopped()
+                    ? EVENT_STOPPED  :EVENT_RUNNING ;
+        } catch (Exception e) {
+            logger.error("Failed to check VM stopping state of instance "
+                    + instanceId, e);
+            String message = Messages.get(ph.getLocale(),
+                    "error_check_vm_running",
+                    new Object[] { instanceName, instanceId });
+            ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
+            return EVENT_FAILED;
+        } finally {
+            if (vmClient != null) {
+                try {
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
+                } catch (Exception e) {
+                    logger.error("Failed to return VMware client into pool", e);
+                }
+            }
+        }
+    }
 
     @StateMachineAction
     public String finalizeProvisioning(String instanceId,
