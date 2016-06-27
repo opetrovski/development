@@ -54,7 +54,7 @@
   </state>
 
   <state id="STOPPING" action="checkVMRunning">
-    <event id="not running" state="RESTART" />
+    <event id="stopped" state="RESTART" />
     <event id="running" state="STOPPING" />
     <event id="failed" state="ERROR" />
   </state>
