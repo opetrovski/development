@@ -178,17 +178,14 @@ public class VM extends Template {
         VirtualMachineRuntimeInfo vmRuntimeInfo = (VirtualMachineRuntimeInfo) vmw
                 .getServiceUtil().getDynamicProperty(vmInstance, "runtime");
 
-        boolean isStopped = false;
         if (vmRuntimeInfo != null) {
-            isStopped = VirtualMachinePowerState.POWERED_OFF
-                    .equals(vmRuntimeInfo.getPowerState());
-            LOG.debug(Boolean.toString(isStopped));
-        } else {
-            LOG.warn("Failed to retrieve runtime information from VM "
-                    + instanceName);
+            return VirtualMachinePowerState.POWERED_OFF.equals(vmRuntimeInfo
+                    .getPowerState());
         }
+        LOG.warn("Failed to retrieve runtime information from VM "
+                + instanceName);
+        return false;
 
-        return isStopped;
     }
 
     public TaskInfo start() throws Exception {
