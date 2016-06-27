@@ -36,7 +36,9 @@ import com.vmware.vim25.TaskReasonAlarm;
 import com.vmware.vim25.TaskReasonSchedule;
 import com.vmware.vim25.TaskReasonSystem;
 import com.vmware.vim25.TaskReasonUser;
+import com.vmware.vim25.VimPortType;
 
+@SuppressWarnings("resource")
 public class Actions {
 
     private static final Logger logger = LoggerFactory.getLogger(Actions.class);
@@ -334,9 +336,7 @@ public class Actions {
             case RUNNING:
                 return EVENT_RUNNING;
             }
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             logger.error("Failed to check task execution result for instance "
                     + instanceId, e);
             String taskKey = ph.getServiceSetting(VMPropertyHandler.TASK_KEY);
@@ -359,9 +359,7 @@ public class Actions {
         return EVENT_ERROR;
     }
 
-    protected String successfulTask(
-            @SuppressWarnings("unused") TaskInfo taskInfo,
-            VMPropertyHandler ph) {
+    protected String successfulTask(TaskInfo taskInfo, VMPropertyHandler ph) {
         ph.setSetting(VMPropertyHandler.GUEST_READY_TIMEOUT_REF,
                 String.valueOf(System.currentTimeMillis()));
         return EVENT_SUCCESS;
@@ -374,35 +372,36 @@ public class Actions {
         String taskKey = paramHandler
                 .getServiceSetting(VMPropertyHandler.TASK_KEY);
         logger.debug("VM: " + instanceId + " taskId: " + taskKey);
-
         if (taskKey == null || "".equals(taskKey)) {
             return null;
         }
 
-        ManagedObjectReference taskManagerRef = vmw.getConnection()
+        VimPortType service = vmw.getConnection().getService();
+        ManagedObjectReference taskManager = vmw.getConnection()
                 .getServiceContent().getTaskManager();
-        TaskFilterSpec taskfilter = new TaskFilterSpec();
-        ManagedObjectReference taskHistoryCollector = vmw.getConnection()
-                .getService()
-                .createCollectorForTasks(taskManagerRef, taskfilter);
-        vmw.getConnection().getService().resetCollector(taskHistoryCollector);
-        vmw.getConnection().getService().readNextTasks(taskHistoryCollector,
-                100);
-        List<TaskInfo> taskList = vmw.getConnection().getService()
-                .readPreviousTasks(taskHistoryCollector, 100);
+        ManagedObjectReference taskHistoryCollector = service
+                .createCollectorForTasks(taskManager, new TaskFilterSpec());
+        try {
+            service.resetCollector(taskHistoryCollector);
+            service.readNextTasks(taskHistoryCollector, 100);
+            List<TaskInfo> taskList = vmw.getConnection().getService()
+                    .readPreviousTasks(taskHistoryCollector, 100);
 
-        if (taskList != null) {
-            for (TaskInfo taskInfo : taskList) {
-                if (taskInfo != null && taskKey.equals(taskInfo.getKey())) {
-                    logTaskInfo(taskInfo);
-                    return taskInfo;
+            if (taskList != null) {
+                for (TaskInfo taskInfo : taskList) {
+                    if (taskInfo != null && taskKey.equals(taskInfo.getKey())) {
+                        logTaskInfo(taskInfo);
+                        return taskInfo;
+                    }
                 }
             }
-        }
 
-        logger.error(
-                "Task not found. VM: " + instanceId + " taskId: " + taskKey);
-        return null;
+            logger.error("Task not found. VM: " + instanceId + " taskId: "
+                    + taskKey);
+            return null;
+        } finally {
+            service.destroyCollector(taskHistoryCollector);
+        }
     }
 
     private void logTaskInfo(TaskInfo info) {
