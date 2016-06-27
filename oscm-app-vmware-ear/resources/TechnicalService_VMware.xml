@@ -20,17 +20,17 @@
     provisioningUsername="" 
     provisioningVersion="1.0">
     
-    <AccessInfo locale="en">VMware Access Info</AccessInfo>
+    <AccessInfo locale="en">Access Information to your Virtual Machine</AccessInfo>
     <LocalizedDescription locale="en">VMware Virtual Machine Provisioning</LocalizedDescription>
     <LocalizedDescription locale="de">VMware Virtual Machine Provisioning</LocalizedDescription>    
 	<LocalizedLicense locale="en">License Agreement</LocalizedLicense>
     <LocalizedTag locale="en">VMware</LocalizedTag>
 	
-    <ParameterDefinition id="ACCESS_INFO" configurable="true" default="${HOST}, ${IP}" mandatory="false" valueType="STRING">
+    <ParameterDefinition id="ACCESS_INFO" valueType="STRING" configurable="true" default="${HOST}, ${IP}" mandatory="false">
       <LocalizedDescription locale="en">Access info pattern. Valid placeholder: ${HOST},${IP}</LocalizedDescription>
     </ParameterDefinition>
 
-    <ParameterDefinition id="AMOUNT_OF_RAM" configurable="true" default="1024" mandatory="true" valueType="ENUMERATION">
+    <ParameterDefinition id="AMOUNT_OF_RAM" valueType="ENUMERATION" configurable="true" default="1024" mandatory="true">
       <Options>
         <Option id="1024"><LocalizedOption locale="en">1 GB</LocalizedOption></Option>
         <Option id="2048"><LocalizedOption locale="en">2 GB</LocalizedOption></Option>
@@ -42,15 +42,15 @@
       <LocalizedDescription locale="en">Amount of RAM</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="APP_CONTROLLER_ID" configurable="false" default="ess.vmware" mandatory="true" valueType="STRING">
+    <ParameterDefinition id="APP_CONTROLLER_ID" valueType="STRING" default="ess.vmware" configurable="false" mandatory="true" >
       <LocalizedDescription locale="en">The ID of the APP controller implementation.</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="DISK_SIZE" configurable="true" default="40" mandatory="true" maxValue="160" minValue="40" valueType="INTEGER">
+    <ParameterDefinition id="DISK_SIZE" valueType="INTEGER" configurable="true" default="40" mandatory="true" maxValue="160" minValue="40">
       <LocalizedDescription locale="en">System disk size in Gigabyte</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="DATA_DISK_SIZE_1" configurable="true" mandatory="false" maxValue="140" minValue="20" valueType="INTEGER">
+    <ParameterDefinition id="DATA_DISK_SIZE_1" valueType="INTEGER" configurable="true" mandatory="false" maxValue="140" minValue="20">
       <LocalizedDescription locale="en">Data disk size in Gigabyte</LocalizedDescription>
     </ParameterDefinition>
     
@@ -62,7 +62,7 @@
       <LocalizedDescription locale="en">Regex validation pattern for the target mount point</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="IMPORT_EXISTING_VM" configurable="true" default="false" mandatory="true" valueType="BOOLEAN">
+    <ParameterDefinition id="IMPORT_EXISTING_VM" valueType="BOOLEAN" configurable="true" default="false" mandatory="true">
       <LocalizedDescription locale="en">Import of existing VMs</LocalizedDescription>
     </ParameterDefinition>
     
@@ -70,11 +70,11 @@
       <LocalizedDescription locale="en">Name of VM</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="INSTANCENAME_PATTERN" configurable="false" default="^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]$" mandatory="false" modificationType="ONE_TIME" valueType="STRING">
+    <ParameterDefinition id="INSTANCENAME_PATTERN" valueType="STRING" configurable="false" default="^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]$" mandatory="false" modificationType="ONE_TIME">
       <LocalizedDescription locale="en">Regular expression to validate VM name</LocalizedDescription>
     </ParameterDefinition>
     
-    <ParameterDefinition id="INSTANCENAME_PREFIX" configurable="true" mandatory="false" modificationType="ONE_TIME" valueType="STRING">
+    <ParameterDefinition id="INSTANCENAME_PREFIX" valueType="STRING" configurable="true" mandatory="false" modificationType="ONE_TIME">
       <LocalizedDescription locale="en">VM name prefix</LocalizedDescription>
     </ParameterDefinition>
     
