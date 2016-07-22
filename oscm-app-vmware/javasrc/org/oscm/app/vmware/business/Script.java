@@ -57,7 +57,8 @@ public class Script {
     private String script;
 
     public enum OS {
-        LINUX("\n"), WINDOWS("\r\n");
+        LINUX("\n"),
+        WINDOWS("\r\n");
 
         private String lineEnding;
 
@@ -284,6 +285,10 @@ public class Script {
     private void addServiceParametersForLinuxVms(StringBuffer sb)
             throws Exception, APPlatformException {
 
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
         sb.append(buildParameterCommand(VMPropertyHandler.TS_LINUX_ROOT_PWD));
         sb.append(buildParameterCommand(VMPropertyHandler.TS_DOMAIN_NAME));
     }
