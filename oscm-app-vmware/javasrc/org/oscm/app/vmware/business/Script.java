@@ -58,7 +58,8 @@ public class Script {
     private String script;
 
     public enum OS {
-        LINUX("\n"), WINDOWS("\r\n");
+        LINUX("\n"),
+        WINDOWS("\r\n");
 
         private String lineEnding;
 
@@ -111,8 +112,8 @@ public class Script {
         // TODO load certificate from vSphere host and install somehow
         disableSSL();
 
-        script = downloadFile(ph
-                .getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL));
+        script = downloadFile(
+                ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL));
     }
 
     /**
@@ -137,8 +138,8 @@ public class Script {
         sslsc.setSessionTimeout(0);
         sc.init(null, trustAllCerts, null);
 
-        javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc
-                .getSocketFactory());
+        javax.net.ssl.HttpsURLConnection
+                .setDefaultSSLSocketFactory(sc.getSocketFactory());
         HttpsURLConnection.setDefaultHostnameVerifier(verifier);
     }
 
@@ -184,9 +185,9 @@ public class Script {
             GuestWindowsFileAttributes guestFileAttributes = new GuestWindowsFileAttributes();
             guestFileAttributes.setAccessTime(DatatypeFactory.newInstance()
                     .newXMLGregorianCalendar(new GregorianCalendar()));
-            guestFileAttributes.setModificationTime(DatatypeFactory
-                    .newInstance().newXMLGregorianCalendar(
-                            new GregorianCalendar()));
+            guestFileAttributes
+                    .setModificationTime(DatatypeFactory.newInstance()
+                            .newXMLGregorianCalendar(new GregorianCalendar()));
             fileUploadUrl = vimPort.initiateFileTransferToGuest(fileManagerRef,
                     vmwInstance, auth, WINDOWS_GUEST_FILE_PATH,
                     guestFileAttributes, script.length(), true);
@@ -195,9 +196,9 @@ public class Script {
             guestFileAttributes.setPermissions(Long.valueOf(500));
             guestFileAttributes.setAccessTime(DatatypeFactory.newInstance()
                     .newXMLGregorianCalendar(new GregorianCalendar()));
-            guestFileAttributes.setModificationTime(DatatypeFactory
-                    .newInstance().newXMLGregorianCalendar(
-                            new GregorianCalendar()));
+            guestFileAttributes
+                    .setModificationTime(DatatypeFactory.newInstance()
+                            .newXMLGregorianCalendar(new GregorianCalendar()));
             fileUploadUrl = vimPort.initiateFileTransferToGuest(fileManagerRef,
                     vmwInstance, auth, LINUX_GUEST_FILE_PATH,
                     guestFileAttributes, script.length(), true);
@@ -279,8 +280,8 @@ public class Script {
                         pwdPrefix + "'" + HIDDEN_PWD + "'");
             } else if (OS.WINDOWS.equals(os)) {
                 logScript = logScript.replace(
-                        pwdPrefix + password + os.getLineEnding(), pwdPrefix
-                                + HIDDEN_PWD + os.getLineEnding());
+                        pwdPrefix + password + os.getLineEnding(),
+                        pwdPrefix + HIDDEN_PWD + os.getLineEnding());
             }
         }
         return logScript;
@@ -289,24 +290,35 @@ public class Script {
     private List<String> addServiceParametersForWindowsVms(StringBuffer sb)
             throws Exception, APPlatformException {
         List<String> passwords = new ArrayList<String>();
-        passwords
-                .add(sp.getServiceSetting(VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
-        passwords
-                .add(sp.getServiceSetting(VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN));
+        passwords.add(sp.getServiceSetting(
+                VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
+        passwords.add(sp.getServiceSetting(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN));
         sb.append(buildParameterCommand(VMPropertyHandler.TS_DOMAIN_NAME));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_WINDOWS_WORKGROUP));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
+        sb.append(
+                buildParameterCommand(VMPropertyHandler.TS_WINDOWS_WORKGROUP));
         return passwords;
     }
 
     private List<String> addServiceParametersForLinuxVms(StringBuffer sb)
             throws Exception, APPlatformException {
+
         List<String> passwords = new ArrayList<String>();
         passwords
                 .add(sp.getServiceSetting(VMPropertyHandler.TS_LINUX_ROOT_PWD));
+
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
+        sb.append(buildParameterCommand(
+                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
         sb.append(buildParameterCommand(VMPropertyHandler.TS_LINUX_ROOT_PWD));
         sb.append(buildParameterCommand(VMPropertyHandler.TS_DOMAIN_NAME));
         return passwords;
@@ -343,11 +355,11 @@ public class Script {
     }
 
     private void addNetworkServiceParameters(StringBuffer sb) throws Exception {
-        int numNics = Integer.parseInt(sp
-                .getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS));
+        int numNics = Integer.parseInt(
+                sp.getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS));
         while (numNics > 0) {
-            String param = getIndexedParam(
-                    VMPropertyHandler.TS_NIC1_DNS_SERVER, numNics);
+            String param = getIndexedParam(VMPropertyHandler.TS_NIC1_DNS_SERVER,
+                    numNics);
             sb.append(buildParameterCommand(param));
 
             param = getIndexedParam(VMPropertyHandler.TS_NIC1_DNS_SUFFIX,
@@ -401,8 +413,8 @@ public class Script {
         String vcenter = ph
                 .getServiceSetting(VMPropertyHandler.TS_TARGET_VCENTER_SERVER);
         VimPortType vimPort = vmw.getConnection().getService();
-        ServiceConnection conn = new ServiceConnection(vimPort, vmw
-                .getConnection().getServiceContent());
+        ServiceConnection conn = new ServiceConnection(vimPort,
+                vmw.getConnection().getServiceContent());
         ManagedObjectAccessor moa = new ManagedObjectAccessor(conn);
         ManagedObjectReference guestOpManger = vmw.getConnection()
                 .getServiceContent().getGuestOperationsManager();
@@ -424,8 +436,8 @@ public class Script {
         uploadScriptFileToVM(vimPort, vmwInstance, fileManagerRef, auth,
                 scriptPatched, vSphereURL.getHost());
         LOG.debug("Executing CreateTemporaryFile guest operation");
-        String tempFilePath = vimPort.createTemporaryFileInGuest(
-                fileManagerRef, vmwInstance, auth, "", "", "");
+        String tempFilePath = vimPort.createTemporaryFileInGuest(fileManagerRef,
+                vmwInstance, auth, "", "", "");
         LOG.debug("Successfully created a temporary file at: " + tempFilePath
                 + " inside the guest");
 
@@ -458,11 +470,11 @@ public class Script {
                         e);
 
                 if (os == OS.WINDOWS) {
-                    auth.setPassword(ph
-                            .getServiceSetting(VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
+                    auth.setPassword(ph.getServiceSetting(
+                            VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
                 } else {
-                    auth.setPassword(ph
-                            .getServiceSetting(VMPropertyHandler.TS_LINUX_ROOT_PWD));
+                    auth.setPassword(ph.getServiceSetting(
+                            VMPropertyHandler.TS_LINUX_ROOT_PWD));
                 }
             }
             Thread.sleep(5 * 1000);
