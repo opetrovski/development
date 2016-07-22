@@ -9,6 +9,7 @@
 package org.oscm.app.vmware.business;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
 
 import org.oscm.app.v1_0.exceptions.APPlatformException;
@@ -22,6 +23,8 @@ import org.oscm.app.vmware.remote.vmware.VMwareClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vmware.vim25.CustomFieldDef;
+import com.vmware.vim25.CustomFieldStringValue;
 import com.vmware.vim25.CustomizationAdapterMapping;
 import com.vmware.vim25.CustomizationDhcpIpGenerator;
 import com.vmware.vim25.CustomizationFixedIp;
@@ -572,6 +575,41 @@ public class Template {
 
         inventory.initialize();
         return inventory;
+    }
+
+    @SuppressWarnings("unchecked")
+    public HashMap<String, String> getAnnotationAttributes(String templateName)
+            throws Exception {
+        HashMap<String, String> attributes = new HashMap<String, String>();
+
+        ManagedObjectReference customFieldsManager = vmw.getConnection()
+                .getServiceContent().getCustomFieldsManager();
+
+        List<CustomFieldDef> customFieldDef = (List<CustomFieldDef>) vmw
+                .getServiceUtil()
+                .getDynamicProperty(customFieldsManager, "field");
+
+        ManagedObjectReference vmInstance = vmw.getServiceUtil()
+                .getDecendentMoRef(null, "VirtualMachine", templateName);
+        List<CustomFieldStringValue> customValues = (List<CustomFieldStringValue>) vmw
+                .getServiceUtil()
+                .getDynamicProperty(vmInstance, "summary.customValue");
+
+        for (CustomFieldDef field : customFieldDef) {
+            for (CustomFieldStringValue value : customValues) {
+                if (field.getKey() == value.getKey()) {
+                    if (value.getValue() != null
+                            && value.getValue().trim().length() > 0) {
+                        attributes.put(field.getName(), value.getValue());
+                    } else {
+                        logger.warn("no value set for annotation attribute "
+                                + field.getName());
+                    }
+                }
+            }
+        }
+
+        return attributes;
     }
 
 }
