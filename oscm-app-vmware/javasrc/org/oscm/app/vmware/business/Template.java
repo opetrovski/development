@@ -259,21 +259,7 @@ public class Template {
             CustomizationGuiUnattended guiUnattended = new CustomizationGuiUnattended();
             guiUnattended.setAutoLogon(false);
             guiUnattended.setAutoLogonCount(0);
-
-            // int timezone = DEFAULT_TIMEZONE;
-            // String tz = paramHandler
-            // .getServiceSetting(VMPropertyHandler.TS_TIMEZONE_WINDOWS);
-            // try {
-            // if (tz != null) {
-            // timezone = Integer.parseInt(tz);
-            // }
-            // logger.debug("Windows Timezone: " + timezone);
-            // guiUnattended.setTimeZone(timezone);
-            // } catch (NumberFormatException ne) {
-            // logger.error("Failed to convert Windows timezone: " + tz
-            // + ". Using default timezone: " + DEFAULT_TIMEZONE);
             guiUnattended.setTimeZone(DEFAULT_TIMEZONE);
-            // }
 
             if (paramHandler.isServiceSettingTrue(
                     VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN)) {
@@ -301,24 +287,21 @@ public class Template {
                         VMPropertyHandler.TS_WINDOWS_WORKGROUP);
                 identification.setJoinWorkgroup(workgroup);
                 sprep.setIdentification(identification);
-
-                String adminPwd = paramHandler.getServiceSettingValidated(
-                        VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD);
-
-                logger.debug(
-                        "Create workgroup " + workgroup + " pwd: " + adminPwd);
-
-                CustomizationPassword password = new CustomizationPassword();
-                password.setValue(adminPwd);
-                password.setPlainText(true);
-                guiUnattended.setPassword(password);
+                logger.debug("Create workgroup " + workgroup);
             }
+
+            String adminPwd = paramHandler.getServiceSettingValidated(
+                    VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD);
+            CustomizationPassword password = new CustomizationPassword();
+            password.setValue(adminPwd);
+            password.setPlainText(true);
+            guiUnattended.setPassword(password);
+            logger.debug("Set Windows local administrator pwd: " + adminPwd);
 
             sprep.setGuiUnattended(guiUnattended);
 
             String command = paramHandler.getServiceSetting(
                     VMPropertyHandler.TS_SYSPREP_RUNONCE_COMMAND);
-
             if (command != null) {
                 logger.debug("sysprep runonce command: " + command);
                 CustomizationGuiRunOnce guiRunOnce = new CustomizationGuiRunOnce();
@@ -327,9 +310,7 @@ public class Template {
             }
 
             CustomizationUserData userData = new CustomizationUserData();
-
-            CustomizationVirtualMachineName custVirtName = new CustomizationVirtualMachineName();
-            userData.setComputerName(custVirtName);
+            userData.setComputerName(new CustomizationVirtualMachineName());
 
             String fullname = paramHandler
                     .getResponsibleUserAsString(paramHandler.getLocale());
@@ -337,13 +318,12 @@ public class Template {
                 fullname = "No responsible user defined";
             }
             logger.debug("CustomizationUserData.fullName: " + fullname);
-
             userData.setFullName(fullname);
+
             userData.setOrgName("Created by OSCM");
 
             String licenseKey = paramHandler.getServiceSetting(
                     VMPropertyHandler.TS_WINDOWS_LICENSE_KEY);
-
             if (licenseKey != null && licenseKey.trim().length() > 0) {
                 userData.setProductId(licenseKey);
             } else {
