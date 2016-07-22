@@ -53,17 +53,11 @@ public class Template {
 
     private static final Logger logger = LoggerFactory
             .getLogger(Template.class);
+
+    private static final int DEFAULT_TIMEZONE = 110;
+
     protected VMwareClient vmw;
 
-    /**
-     * Creates a new VMware instance based on a given template.
-     * 
-     * @param vmw
-     *            connected VMware client entity
-     * @param paramHandler
-     *            entity which holds all properties of the instance.
-     * @return name of the created instance
-     */
     public TaskInfo cloneVM(VMPropertyHandler paramHandler) throws Exception {
         logger.info("cloneVMFromTemplate() template: "
                 + paramHandler.getTemplateName());
@@ -139,7 +133,7 @@ public class Template {
         cloneSpec.setPowerOn(false);
         cloneSpec.setTemplate(false);
 
-        CustomizationSpec custSpec = getCustomizationSpec(configSpec,
+        CustomizationSpec custSpec = createCustomizationSpec(configSpec,
                 paramHandler);
         cloneSpec.setCustomization(custSpec);
 
@@ -197,12 +191,10 @@ public class Template {
      *            customization specific parameters
      * @return filled VMware customization block
      */
-    private CustomizationSpec getCustomizationSpec(
+    private CustomizationSpec createCustomizationSpec(
             VirtualMachineConfigInfo configSpec, VMPropertyHandler paramHandler)
             throws APPlatformException {
 
-        logger.debug("");
-        final int DEFAULT_TIMEZONE = 110;
         String guestid = configSpec.getGuestId();
         if (guestid == null) {
             throw new APPlatformException(
@@ -234,8 +226,9 @@ public class Template {
 
         CustomizationSpec cspec = new CustomizationSpec();
         CustomizationGlobalIPSettings gIP = new CustomizationGlobalIPSettings();
-        if (isLinux) {
+        cspec.setGlobalIPSettings(gIP);
 
+        if (isLinux) {
             String[] dnsserver = paramHandler.getDNSServer(1).split(",");
             for (String server : dnsserver) {
                 logger.debug(
@@ -251,8 +244,23 @@ public class Template {
                                 + suffix);
                 gIP.getDnsSuffixList().add(suffix.trim());
             }
+
+            CustomizationLinuxPrep sprep = new CustomizationLinuxPrep();
+
+            String domain = paramHandler
+                    .getServiceSetting(VMPropertyHandler.TS_DOMAIN_NAME);
+            logger.debug("Linux domain name: " + domain);
+            if (domain != null) {
+                sprep.setDomain(domain);
+            }
+
+            sprep.setHostName(new CustomizationVirtualMachineName());
+            sprep.setTimeZone("363");
+
+            sprep.setHwClockUTC(Boolean.TRUE);
+            cspec.setIdentity(sprep);
+            cspec.setOptions(new CustomizationLinuxOptions());
         }
-        cspec.setGlobalIPSettings(gIP);
 
         if (isWindows) {
             CustomizationSysprep sprep = new CustomizationSysprep();
@@ -338,29 +346,6 @@ public class Template {
             options.setChangeSID(true);
             options.setDeleteAccounts(false);
             cspec.setOptions(options);
-        }
-
-        if (isLinux) {
-            CustomizationLinuxPrep sprep = new CustomizationLinuxPrep();
-
-            String domain = paramHandler
-                    .getServiceSetting(VMPropertyHandler.TS_DOMAIN_NAME);
-            logger.debug("Linux domain name: " + domain);
-            if (domain != null) {
-                sprep.setDomain(domain);
-            }
-
-            sprep.setHostName(new CustomizationVirtualMachineName());
-
-            // String timezone = paramHandler.getLinuxTimezone();
-            // if (timezone != null) {
-            // logger.debug("Linux Timezone: " + timezone);
-            sprep.setTimeZone("363");
-            // }
-
-            sprep.setHwClockUTC(Boolean.TRUE);
-            cspec.setIdentity(sprep);
-            cspec.setOptions(new CustomizationLinuxOptions());
         }
 
         int numberOfNICs = Integer.parseInt(paramHandler
@@ -581,43 +566,6 @@ public class Template {
 
         }
 
-        // ServiceConnection connection = appUtil.getConnection();
-        // VimPortType service = connection.getService();
-        // ServiceContent content = connection.getServiceContent();
-        //
-        // List<SelectionSpec> selectionSpecs =
-        // serviceUtil.buildFullTraversal();
-        // List<PropertySpec> propertySpecs = serviceUtil
-        // .buildInventoryPropertySpec();
-        //
-        // ObjectSpec objectSpec = new ObjectSpec();
-        // objectSpec.setObj(dcMoRef);
-        // objectSpec.setSkip(Boolean.FALSE);
-        // objectSpec.getSelectSet().addAll(selectionSpecs);
-        //
-        // PropertyFilterSpec spec = new PropertyFilterSpec();
-        // spec.getPropSet().addAll(propertySpecs);
-        // spec.getObjectSet().add(objectSpec);
-        //
-        // List<ObjectContent> objectContents = service.retrieveProperties(
-        // content.getPropertyCollector(),
-        // Collections.singletonList(spec));
-        //
-        // if (objectContents != null) {
-        // for (ObjectContent oc : objectContents) {
-        // String type = oc.getObj().getType();
-        // List<DynamicProperty> dps = oc.getPropSet();
-        // if (dps != null) {
-        // if ("Datastore".equals(type)) {
-        // inventory.addStorage(dps);
-        // } else if ("VirtualMachine".equals(type)) {
-        // inventory.addVirtualMachine(dps, serviceUtil);
-        // } else if ("HostSystem".equals(type)) {
-        // inventory.addHostSystem(dps);
-        // }
-        // }
-        // }
-        // }
         inventory.initialize();
         return inventory;
     }
