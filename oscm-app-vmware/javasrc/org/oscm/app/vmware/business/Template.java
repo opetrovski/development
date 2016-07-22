@@ -56,9 +56,16 @@ public class Template {
 
     private static final int DEFAULT_TIMEZONE = 110;
 
-    protected VMwareClient vmw;
+    private VMPropertyHandler paramHandler;
 
-    public TaskInfo cloneVM(VMPropertyHandler paramHandler) throws Exception {
+    private VMwareClient vmw;
+
+    public Template(VMwareClient vmw, VMPropertyHandler paramHandler) {
+        this.vmw = vmw;
+        this.paramHandler = paramHandler;
+    }
+
+    public TaskInfo cloneVM() throws Exception {
         logger.info("cloneVMFromTemplate() template: "
                 + paramHandler.getTemplateName());
 

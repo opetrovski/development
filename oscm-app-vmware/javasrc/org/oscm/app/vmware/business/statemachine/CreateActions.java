@@ -17,6 +17,7 @@ import org.oscm.app.v1_0.data.InstanceStatus;
 import org.oscm.app.v1_0.data.ProvisioningSettings;
 import org.oscm.app.v1_0.exceptions.APPlatformException;
 import org.oscm.app.vmware.business.Controller;
+import org.oscm.app.vmware.business.Template;
 import org.oscm.app.vmware.business.VM;
 import org.oscm.app.vmware.business.VMPropertyHandler;
 import org.oscm.app.vmware.business.statemachine.api.StateMachineAction;
@@ -73,8 +74,8 @@ public class CreateActions extends Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM template = new VM(vmClient, ph.getTemplateName());
-            TaskInfo taskInfo = template.cloneVM(ph);
+            Template template = new Template(vmClient, ph);
+            TaskInfo taskInfo = template.cloneVM();
             ph.setTask(taskInfo);
             return EVENT_CREATING;
         } catch (Exception e) {
@@ -111,7 +112,7 @@ public class CreateActions extends Actions {
             if (ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL) != null
                     && ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL)
                             .trim().length() > 0) {
-                VM vm = new VM(vmClient, ph.getInstanceName());
+                VM vm = new VM(vmClient, ph);
                 vm.runScript(ph);
             }
             return EVENT_SUCCESS;

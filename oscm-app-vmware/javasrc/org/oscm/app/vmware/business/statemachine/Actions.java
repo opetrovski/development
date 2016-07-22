@@ -69,7 +69,7 @@ public class Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM vm = new VM(vmClient, ph.getInstanceName());
+            VM vm = new VM(vmClient, ph);
             TaskInfo tInfo = vm.reconfigureVirtualMachine(ph);
             ph.setTask(tInfo);
             return EVENT_CONFIGURING;
@@ -82,8 +82,8 @@ public class Actions {
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -106,7 +106,7 @@ public class Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM vm = new VM(vmClient, ph.getInstanceName());
+            VM vm = new VM(vmClient, ph);
             vm.stop(false);
             return EVENT_STOPPED;
         } catch (Exception e) {
@@ -118,8 +118,8 @@ public class Actions {
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -142,7 +142,7 @@ public class Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM vm = new VM(vmClient, ph.getInstanceName());
+            VM vm = new VM(vmClient, ph);
             TaskInfo tInfo = vm.stop(true);
             ph.setTask(tInfo);
             return EVENT_STOPPING;
@@ -155,8 +155,8 @@ public class Actions {
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -176,7 +176,7 @@ public class Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM vm = new VM(vmClient, ph.getInstanceName());
+            VM vm = new VM(vmClient, ph);
             TaskInfo tInfo = vm.start();
             ph.setTask(tInfo);
             return EVENT_STARTING;
@@ -189,8 +189,8 @@ public class Actions {
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -212,24 +212,23 @@ public class Actions {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
             instanceName = ph.getInstanceName();
-            VM vm = new VM(vmClient, instanceName);
+            VM vm = new VM(vmClient, ph);
             VMwareGuestSystemStatus guestStatus = vm.getState(ph);
-
-            return guestStatus == VMwareGuestSystemStatus.GUEST_READY ? EVENT_RUNNING
-                    : EVENT_NOT_RUNNING;
+            return guestStatus == VMwareGuestSystemStatus.GUEST_READY
+                    ? EVENT_RUNNING : EVENT_NOT_RUNNING;
         } catch (Exception e) {
             logger.error("Failed to check VM running state of instance "
                     + instanceId, e);
             String message = Messages.get(ph.getLocale(),
-                    "error_check_vm_running", new Object[] { instanceName,
-                            instanceId });
+                    "error_check_vm_running",
+                    new Object[] { instanceName, instanceId });
             ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
             return EVENT_FAILED;
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -251,22 +250,22 @@ public class Actions {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
             instanceName = ph.getInstanceName();
-            VM vm = new VM(vmClient, instanceName);
+            VM vm = new VM(vmClient, ph);
 
             return vm.isStopped() ? EVENT_STOPPED : EVENT_RUNNING;
         } catch (Exception e) {
             logger.error("Failed to check VM stopping state of instance "
                     + instanceId, e);
             String message = Messages.get(ph.getLocale(),
-                    "error_check_vm_running", new Object[] { instanceName,
-                            instanceId });
+                    "error_check_vm_running",
+                    new Object[] { instanceName, instanceId });
             ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
             return EVENT_FAILED;
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -285,15 +284,15 @@ public class Actions {
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            VM vm = new VM(vmClient, ph.getInstanceName());
+            VM vm = new VM(vmClient, ph);
             String accessInfo = vm.generateAccessInfo(ph);
             ph.setAccessInfo(accessInfo);
             result.setAccessInfo(accessInfo);
             result.setIsReady(true);
             return EVENT_SUCCESS;
         } catch (Exception e) {
-            logger.error(
-                    "Failed to set access info for instance " + instanceId, e);
+            logger.error("Failed to set access info for instance " + instanceId,
+                    e);
             String message = Messages.get(ph.getLocale(),
                     "error_finalize_provisioning", new Object[] { instanceId });
             ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
@@ -301,8 +300,8 @@ public class Actions {
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -357,7 +356,8 @@ public class Actions {
                             errorMessage += msg.getMessage();
                         }
 
-                        if (taskInfo.getError().getFault().getFaultCause() != null) {
+                        if (taskInfo.getError().getFault()
+                                .getFaultCause() != null) {
                             String errorMsg = taskInfo.getError().getFault()
                                     .getFaultCause().getLocalizedMessage();
                             logger.error(errorMsg);
@@ -377,15 +377,15 @@ public class Actions {
                     + instanceId, e);
             String taskKey = ph.getServiceSetting(VMPropertyHandler.TASK_KEY);
             String message = Messages.get(ph.getLocale(),
-                    "error_check_task_result", new Object[] { instanceId,
-                            taskKey });
+                    "error_check_task_result",
+                    new Object[] { instanceId, taskKey });
             ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
             return EVENT_ERROR;
         } finally {
             if (vmClient != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, vmClient);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            vmClient);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }
@@ -470,14 +470,14 @@ public class Actions {
         }
 
         XMLGregorianCalendar queueT = info.getQueueTime();
-        String queueTime = queueT != null ? queueT.toGregorianCalendar()
-                .getTime().toString() : "";
+        String queueTime = queueT != null
+                ? queueT.toGregorianCalendar().getTime().toString() : "";
         XMLGregorianCalendar startT = info.getStartTime();
-        String startTime = startT != null ? startT.toGregorianCalendar()
-                .getTime().toString() : "";
+        String startTime = startT != null
+                ? startT.toGregorianCalendar().getTime().toString() : "";
         XMLGregorianCalendar completeT = info.getCompleteTime();
-        String completeTime = completeT != null ? completeT
-                .toGregorianCalendar().getTime().toString() : "";
+        String completeTime = completeT != null
+                ? completeT.toGregorianCalendar().getTime().toString() : "";
         logger.debug(key + " name: " + name + " target: " + target + " state: "
                 + state + " progress: " + progress + "% description: "
                 + description + " initiated: " + initiatedBy + " queue-time: "

@@ -34,7 +34,7 @@ import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineRuntimeInfo;
 
-public class VM extends Template {
+public class VM {
 
     private static final Logger LOG = LoggerFactory.getLogger(VM.class);
 
@@ -46,13 +46,18 @@ public class VM extends Template {
     private ManagedObjectReference folder;
     private GuestInfo guestInfo;
     private String instanceName;
+    private VMPropertyHandler paramHandler;
+    private VMwareClient vmw;
 
     public VM() {
 
     }
 
-    public VM(VMwareClient vmw, String instanceName) throws Exception {
+    public VM(VMwareClient vmw, VMPropertyHandler paramHandler,
+            String instanceName) throws Exception {
+
         this.vmw = vmw;
+        this.paramHandler = paramHandler;
         this.instanceName = instanceName;
 
         vmInstance = vmw.getServiceUtil().getDecendentMoRef(null,
@@ -70,6 +75,11 @@ public class VM extends Template {
             throw new Exception(
                     "Failed to retrieve information of VM " + instanceName);
         }
+    }
+
+    public VM(VMwareClient vmw, VMPropertyHandler paramHandler)
+            throws Exception {
+        this(vmw, paramHandler, paramHandler.getInstanceName());
     }
 
     public String getGuestFullName() {
