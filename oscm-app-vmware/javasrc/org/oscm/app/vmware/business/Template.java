@@ -134,14 +134,13 @@ public class Template {
         }
 
         VirtualMachineCloneSpec cloneSpec = new VirtualMachineCloneSpec();
-        VirtualMachineRelocateSpec relocSpec = setHostAndStorage(vmw,
-                paramHandler, vmDataCenter, datacenter, cluster);
+        VirtualMachineRelocateSpec relocSpec = setHostAndStorage(vmDataCenter,
+                datacenter, cluster);
         cloneSpec.setLocation(relocSpec);
         cloneSpec.setPowerOn(false);
         cloneSpec.setTemplate(false);
 
-        CustomizationSpec custSpec = createCustomizationSpec(configSpec,
-                paramHandler);
+        CustomizationSpec custSpec = createCustomizationSpec(configSpec);
         cloneSpec.setCustomization(custSpec);
 
         VirtualMachineConfigSpec vmConfSpec = new VirtualMachineConfigSpec();
@@ -199,8 +198,7 @@ public class Template {
      * @return filled VMware customization block
      */
     private CustomizationSpec createCustomizationSpec(
-            VirtualMachineConfigInfo configSpec, VMPropertyHandler paramHandler)
-            throws APPlatformException {
+            VirtualMachineConfigInfo configSpec) throws APPlatformException {
 
         String guestid = configSpec.getGuestId();
         if (guestid == null) {
@@ -400,9 +398,9 @@ public class Template {
      * If host and storage are not defined as technical service parameter then
      * the load balancing mechanism is used to determine host and storage
      */
-    private VirtualMachineRelocateSpec setHostAndStorage(VMwareClient vmw,
-            VMPropertyHandler paramHandler, ManagedObjectReference vmDataCenter,
-            String datacenter, String cluster) throws Exception {
+    private VirtualMachineRelocateSpec setHostAndStorage(
+            ManagedObjectReference vmDataCenter, String datacenter,
+            String cluster) throws Exception {
         logger.debug("datacenter: " + datacenter + " cluster: " + cluster);
         String xmlData = paramHandler.getHostLoadBalancerConfig();
         VirtualMachineRelocateSpec relocSpec = new VirtualMachineRelocateSpec();
@@ -414,7 +412,7 @@ public class Template {
         if (hostName == null || hostName.trim().length() == 0) {
             logger.debug(
                     "target host not set. get host and storage from loadbalancer");
-            VMwareDatacenterInventory inventory = readDatacenterInventory(vmw,
+            VMwareDatacenterInventory inventory = readDatacenterInventory(
                     datacenter, cluster);
             LoadBalancerConfiguration balancerConfig = new LoadBalancerConfiguration(
                     xmlData, inventory);
@@ -428,7 +426,7 @@ public class Template {
                 logger.debug(
                         "target storage not set. get host and storage from loadbalancer");
                 VMwareDatacenterInventory inventory = readDatacenterInventory(
-                        vmw, datacenter, cluster);
+                        datacenter, cluster);
                 VMwareHost host = inventory.getHost(hostName);
                 VMwareStorage storage = host.getNextStorage(paramHandler);
                 storageName = storage.getName();
@@ -492,12 +490,11 @@ public class Template {
     }
 
     @SuppressWarnings("unchecked")
-    private VMwareDatacenterInventory readDatacenterInventory(
-            VMwareClient appUtil, String datacenter, String cluster)
-            throws Exception {
+    private VMwareDatacenterInventory readDatacenterInventory(String datacenter,
+            String cluster) throws Exception {
         logger.debug("datacenter: " + datacenter + " cluster: " + cluster);
 
-        ManagedObjectAccessor serviceUtil = appUtil.getServiceUtil();
+        ManagedObjectAccessor serviceUtil = vmw.getServiceUtil();
 
         ManagedObjectReference dcMoRef = serviceUtil.getDecendentMoRef(null,
                 "Datacenter", datacenter);

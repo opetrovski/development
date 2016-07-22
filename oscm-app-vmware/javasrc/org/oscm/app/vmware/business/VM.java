@@ -105,8 +105,7 @@ public class VM {
         return isLinux;
     }
 
-    public void updateServiceParameter(VMPropertyHandler paramHandler)
-            throws Exception {
+    public void updateServiceParameter() throws Exception {
         LOG.debug("instanceName: " + instanceName);
         int key = getDataDiskKey();
         if (key != -1) {
@@ -234,7 +233,7 @@ public class VM {
         return folder;
     }
 
-    public void runScript(VMPropertyHandler paramHandler) throws Exception {
+    public void runScript() throws Exception {
         LOG.debug("instanceName: " + instanceName);
 
         String scriptURL = paramHandler
@@ -258,8 +257,7 @@ public class VM {
      * adapter. The VM has been created and must be stopped to reconfigure the
      * hardware.
      */
-    public TaskInfo reconfigureVirtualMachine(VMPropertyHandler paramHandler)
-            throws Exception {
+    public TaskInfo reconfigureVirtualMachine() throws Exception {
         LOG.debug("instanceName: " + instanceName);
 
         VimPortType service = vmw.getConnection().getService();
@@ -345,12 +343,11 @@ public class VM {
                 "info");
     }
 
-    public VMwareGuestSystemStatus getState(VMPropertyHandler properties)
-            throws Exception {
+    public VMwareGuestSystemStatus getState() throws Exception {
 
         boolean networkCardsConnected = areNetworkCardsConnected();
         boolean validHostname = isValidHostname();
-        boolean validIp = isValidIp(properties);
+        boolean validIp = isValidIp(paramHandler);
 
         if (isLinux()) {
             boolean firstStart = isNotEmpty(guestInfo.getHostName()) && !validIp
@@ -367,7 +364,7 @@ public class VM {
                 return VMwareGuestSystemStatus.GUEST_READY;
             }
 
-            LOG.debug(createLogForGetState(validHostname, properties,
+            LOG.debug(createLogForGetState(validHostname, paramHandler,
                     networkCardsConnected, validIp));
             return VMwareGuestSystemStatus.GUEST_NOTREADY;
         }
@@ -377,7 +374,7 @@ public class VM {
             return VMwareGuestSystemStatus.GUEST_READY;
         }
 
-        LOG.debug(createLogForGetState(validHostname, properties,
+        LOG.debug(createLogForGetState(validHostname, paramHandler,
                 networkCardsConnected, validIp));
         return VMwareGuestSystemStatus.GUEST_NOTREADY;
     }
@@ -502,8 +499,7 @@ public class VM {
         return true;
     }
 
-    public String generateAccessInfo(VMPropertyHandler paramHandler)
-            throws Exception {
+    public String generateAccessInfo() throws Exception {
 
         VMwareAccessInfo accInfo = new VMwareAccessInfo(paramHandler);
         String accessInfo = accInfo.generateAccessInfo(guestInfo);
@@ -569,7 +565,7 @@ public class VM {
         return configSpec.getHardware().getNumCoresPerSocket();
     }
 
-    public String getCPUModel(VMPropertyHandler paramHandler) throws Exception {
+    public String getCPUModel() throws Exception {
         String datacenter = paramHandler.getTargetDatacenter();
         ManagedObjectReference dataCenterRef = vmw.getServiceUtil()
                 .getDecendentMoRef(null, "Datacenter", datacenter);

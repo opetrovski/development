@@ -70,7 +70,7 @@ public class Actions {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
             VM vm = new VM(vmClient, ph);
-            TaskInfo tInfo = vm.reconfigureVirtualMachine(ph);
+            TaskInfo tInfo = vm.reconfigureVirtualMachine();
             ph.setTask(tInfo);
             return EVENT_CONFIGURING;
         } catch (Exception e) {
@@ -213,7 +213,7 @@ public class Actions {
                     .borrowObject(vcenter);
             instanceName = ph.getInstanceName();
             VM vm = new VM(vmClient, ph);
-            VMwareGuestSystemStatus guestStatus = vm.getState(ph);
+            VMwareGuestSystemStatus guestStatus = vm.getState();
             return guestStatus == VMwareGuestSystemStatus.GUEST_READY
                     ? EVENT_RUNNING : EVENT_NOT_RUNNING;
         } catch (Exception e) {
@@ -285,7 +285,7 @@ public class Actions {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
             VM vm = new VM(vmClient, ph);
-            String accessInfo = vm.generateAccessInfo(ph);
+            String accessInfo = vm.generateAccessInfo();
             ph.setAccessInfo(accessInfo);
             result.setAccessInfo(accessInfo);
             result.setIsReady(true);
