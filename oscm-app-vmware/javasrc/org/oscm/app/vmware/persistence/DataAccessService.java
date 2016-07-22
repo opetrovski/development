@@ -484,7 +484,7 @@ public class DataAccessService {
             return null;
         }
 
-        query = "SELECT name,COUNT(ip_address) AS NumIPs FROM vmwareuser.vlan LEFT JOIN vmwareuser.ippool ON vmwareuser.vlan.tkey in ("
+        query = "SELECT name,COUNT(ip_address) AS NumIPs FROM vmwareuser.vlan INNER JOIN vmwareuser.ippool ON vmwareuser.vlan.tkey in ("
                 + vlans.toString()
                 + ") and vmwareuser.vlan.tkey=vmwareuser.ippool.vlan_tkey and in_use = false GROUP BY name ORDER BY NumIPs DESC LIMIT 1";
         String vlan = null;
