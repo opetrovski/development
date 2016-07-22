@@ -114,7 +114,7 @@ public class CreateActions extends Actions {
                     && ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL)
                             .trim().length() > 0) {
                 VM vm = new VM(vmClient, ph);
-                vm.runScript(ph);
+                vm.runScript();
             }
             return EVENT_SUCCESS;
         } catch (Exception e) {
