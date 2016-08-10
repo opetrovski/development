@@ -77,23 +77,25 @@ public class TargetLocationBean extends UiBeanBase {
     private void initBean() {
         vcenter = settings.getTargetVCenter();
         for (VCenter vc : vcenter) {
-            SelectItem item = new SelectItem(Integer.valueOf(vc.tkey), vc.name);
+            SelectItem item = new SelectItem(Integer.valueOf(vc.getTkey()),
+                    vc.getName());
             vcenterList.add(item);
             if (vcenterList.size() == 1) {
                 selectedVCenter = vc;
-                currentVCenter = vc.tkey;
-                for (Datacenter dc : vc.datacenter) {
-                    SelectItem item2 = new SelectItem(dc.name, dc.name);
+                currentVCenter = vc.getTkey();
+                for (Datacenter dc : vc.getDatacenter()) {
+                    SelectItem item2 = new SelectItem(dc.getName(),
+                            dc.getName());
                     datacenterList.add(item2);
                     if (datacenterList.size() == 1) {
-                        for (Cluster cluster : dc.cluster) {
+                        for (Cluster cluster : dc.getCluster()) {
                             SelectItem item3 = new SelectItem(
-                                    Integer.valueOf(cluster.tkey),
-                                    cluster.name);
+                                    Integer.valueOf(cluster.getTkey()),
+                                    cluster.getName());
                             clusterList.add(item3);
                             if (clusterList.size() == 1) {
                                 selectedCluster = cluster;
-                                currentCluster = cluster.tkey;
+                                currentCluster = cluster.getTkey();
                             }
                         }
                     }
@@ -135,12 +137,12 @@ public class TargetLocationBean extends UiBeanBase {
         xmlConfig = new XMLHostConfiguration();
         Cluster cl = getCluster(currentCluster);
         try {
-            if (cl.loadbalancer == null) {
+            if (cl.getLoadbalancer() == null) {
                 String message = Messages.get(getDefaultLanguage(),
                         "ui.config.status.noconfig");
                 throw new ConfigurationException(message);
             }
-            xmlConfig.load(new StringReader(cl.loadbalancer));
+            xmlConfig.load(new StringReader(cl.getLoadbalancer()));
 
         } catch (ConfigurationException e) {
             logger.error("Failed to parse load balancer XML", e);
@@ -179,7 +181,7 @@ public class TargetLocationBean extends UiBeanBase {
      * Save modified values to database
      */
     public void save() {
-        logger.debug("Save settings for cluster " + selectedCluster.name);
+        logger.debug("Save settings for cluster " + selectedCluster.getName());
         status = null;
         dirty = true;
 
@@ -207,7 +209,7 @@ public class TargetLocationBean extends UiBeanBase {
         }
 
         try {
-            selectedCluster.loadbalancer = getXml();
+            selectedCluster.setLoadbalancer(getXml());
             settings.saveTargetVCenter(selectedVCenter);
             dirty = false;
         } catch (Exception e) {
@@ -340,20 +342,21 @@ public class TargetLocationBean extends UiBeanBase {
         if (event.getNewValue() != null) {
             currentVCenter = Integer.parseInt((String) event.getNewValue());
             selectedVCenter = getVCenter(currentVCenter);
-            logger.debug(selectedVCenter.name);
+            logger.debug(selectedVCenter.getName());
             datacenterList.clear();
-            for (Datacenter dc : selectedVCenter.datacenter) {
-                SelectItem item = new SelectItem(dc.name, dc.name);
+            for (Datacenter dc : selectedVCenter.getDatacenter()) {
+                SelectItem item = new SelectItem(dc.getName(), dc.getName());
                 datacenterList.add(item);
                 if (datacenterList.size() == 1) {
                     clusterList.clear();
-                    for (Cluster cluster : dc.cluster) {
+                    for (Cluster cluster : dc.getCluster()) {
                         SelectItem it = new SelectItem(
-                                Integer.valueOf(cluster.tkey), cluster.name);
+                                Integer.valueOf(cluster.getTkey()),
+                                cluster.getName());
                         clusterList.add(it);
                         if (clusterList.size() == 1) {
                             selectedCluster = cluster;
-                            currentCluster = cluster.tkey;
+                            currentCluster = cluster.getTkey();
                             parseConfiguration();
                         }
                     }
@@ -368,14 +371,15 @@ public class TargetLocationBean extends UiBeanBase {
         if (event.getNewValue() != null) {
             currentDatacenter = (String) event.getNewValue();
             Datacenter dc = getDatacenter(currentDatacenter);
-            logger.debug(dc.name);
+            logger.debug(dc.getName());
             clusterList.clear();
-            for (Cluster cluster : dc.cluster) {
-                SelectItem item = new SelectItem(cluster.name, cluster.name);
+            for (Cluster cluster : dc.getCluster()) {
+                SelectItem item = new SelectItem(cluster.getName(),
+                        cluster.getName());
                 clusterList.add(item);
                 if (clusterList.size() == 1) {
                     selectedCluster = cluster;
-                    currentCluster = cluster.tkey;
+                    currentCluster = cluster.getTkey();
                     parseConfiguration();
                 }
             }
@@ -388,7 +392,7 @@ public class TargetLocationBean extends UiBeanBase {
             currentCluster = Integer.parseInt((String) event.getNewValue());
             Cluster cl = getCluster(currentCluster);
             selectedCluster = cl;
-            logger.debug(cl.name);
+            logger.debug(cl.getName());
             hostBalancer = null;
             parseConfiguration();
         }
@@ -396,7 +400,7 @@ public class TargetLocationBean extends UiBeanBase {
 
     private VCenter getVCenter(int tkey) {
         for (VCenter vc : vcenter) {
-            if (vc.tkey == tkey) {
+            if (vc.getTkey() == tkey) {
                 return vc;
             }
         }
@@ -404,8 +408,8 @@ public class TargetLocationBean extends UiBeanBase {
     }
 
     private Datacenter getDatacenter(String name) {
-        for (Datacenter dc : selectedVCenter.datacenter) {
-            if (dc.name.equals(name)) {
+        for (Datacenter dc : selectedVCenter.getDatacenter()) {
+            if (dc.getName().equals(name)) {
                 return dc;
             }
         }
@@ -414,9 +418,9 @@ public class TargetLocationBean extends UiBeanBase {
 
     private Cluster getCluster(int tkey) {
         for (VCenter vc : vcenter) {
-            for (Datacenter dc : vc.datacenter) {
-                for (Cluster cl : dc.cluster) {
-                    if (cl.tkey == tkey) {
+            for (Datacenter dc : vc.getDatacenter()) {
+                for (Cluster cl : dc.getCluster()) {
+                    if (cl.getTkey() == tkey) {
                         return cl;
                     }
                 }
