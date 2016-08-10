@@ -109,16 +109,10 @@ public class TargetLocationBean extends UiBeanBase {
         hostBalancerList.add(new SelectItem(
                 "org.oscm.app.vmware.business.balancer.EquipartitionHostBalancer",
                 "Distribute VMs equally over all hosts (static configuration)"));
-        hostBalancerList.add(new SelectItem(
-                "org.oscm.app.vmware.business.balancer.SequentialHostBalancer",
-                "Distribute VMs in the order of the configured hosts"));
 
         storageBalancerList.add(new SelectItem(
                 "org.oscm.app.vmware.business.balancer.EquipartitionStorageBalancer",
                 "Distribute VMs equally over all storages"));
-        storageBalancerList.add(new SelectItem(
-                "org.oscm.app.vmware.business.balancer.SequentialStorageBalancer",
-                "Distribute VMs in the order of the configured storages"));
 
         parseConfiguration();
     }
