@@ -85,8 +85,8 @@ public class SnapshotActions extends Actions {
         try {
             client = VMClientPool.getInstance().getPool().borrowObject(vcenter);
 
-            ManagedObjectReference vm = client.getVirtualMachine(ph
-                    .getInstanceName());
+            ManagedObjectReference vm = client
+                    .getVirtualMachine(ph.getInstanceName());
             String description = "Instance ID: " + instanceId
                     + ", Snapshot date: " + (new Date());
             boolean dumpMemory = false;
@@ -106,8 +106,8 @@ public class SnapshotActions extends Actions {
         } finally {
             if (client != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, client);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            client);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }

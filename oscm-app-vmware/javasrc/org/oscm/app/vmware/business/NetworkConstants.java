@@ -13,5 +13,7 @@ package org.oscm.app.vmware.business;
  *
  */
 public enum NetworkConstants {
-    DATABASE, DHCP, MANUAL
+    DATABASE,
+    DHCP,
+    MANUAL
 }

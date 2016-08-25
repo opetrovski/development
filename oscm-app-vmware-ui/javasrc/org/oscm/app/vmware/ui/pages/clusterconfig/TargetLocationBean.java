@@ -18,6 +18,7 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -39,6 +40,7 @@ public class TargetLocationBean extends UiBeanBase {
     private static final long serialVersionUID = 4584243999849571470L;
     private static final Logger logger = LoggerFactory
             .getLogger(UiBeanBase.class);
+
     private static final String ELEMENT_HOST = "host";
     private static final String ELEMENT_STORAGE = "storage";
     private static final String ELEMENT_BALANCER = "balancer";
@@ -109,11 +111,16 @@ public class TargetLocationBean extends UiBeanBase {
         hostBalancerList.add(new SelectItem(
                 "org.oscm.app.vmware.business.balancer.EquipartitionHostBalancer",
                 "Distribute VMs equally over all hosts (static configuration)"));
+        hostBalancerList.add(new SelectItem(
+                "org.oscm.app.vmware.business.balancer.SequentialHostBalancer",
+                "Distribute VMs in the order of the configured hosts"));
 
         storageBalancerList.add(new SelectItem(
                 "org.oscm.app.vmware.business.balancer.EquipartitionStorageBalancer",
                 "Distribute VMs equally over all storages"));
-
+        storageBalancerList.add(new SelectItem(
+                "org.oscm.app.vmware.business.balancer.SequentialStorageBalancer",
+                "Distribute VMs in the order of the configured storages"));
         parseConfiguration();
     }
 
@@ -175,7 +182,6 @@ public class TargetLocationBean extends UiBeanBase {
      * Save modified values to database
      */
     public void save() {
-        logger.debug("Save settings for cluster " + selectedCluster.getName());
         status = null;
         dirty = true;
 
@@ -365,7 +371,6 @@ public class TargetLocationBean extends UiBeanBase {
         if (event.getNewValue() != null) {
             currentDatacenter = (String) event.getNewValue();
             Datacenter dc = getDatacenter(currentDatacenter);
-            logger.debug(dc.getName());
             clusterList.clear();
             for (Cluster cluster : dc.getCluster()) {
                 SelectItem item = new SelectItem(cluster.getName(),
@@ -386,7 +391,6 @@ public class TargetLocationBean extends UiBeanBase {
             currentCluster = Integer.parseInt((String) event.getNewValue());
             Cluster cl = getCluster(currentCluster);
             selectedCluster = cl;
-            logger.debug(cl.getName());
             hostBalancer = null;
             parseConfiguration();
         }
@@ -461,5 +465,20 @@ public class TargetLocationBean extends UiBeanBase {
 
     public void setSelectedCluster(Cluster selectedCluster) {
         this.selectedCluster = selectedCluster;
+    }
+
+    public String getLoggedInUserId() {
+        FacesContext facesContext = getFacesContext();
+        HttpSession session = (HttpSession) facesContext.getExternalContext()
+                .getSession(false);
+        if (session != null) {
+            String loggedInUserId = "" + session.getAttribute("loggedInUserId");
+            return loggedInUserId;
+        }
+        return null;
+    }
+
+    protected FacesContext getFacesContext() {
+        return FacesContext.getCurrentInstance();
     }
 }

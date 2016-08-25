@@ -56,9 +56,9 @@ public class RestoreActions extends Actions {
 
             ManagedObjectReference targetHost = null;
             boolean suppressPowerOn = false;
-            ManagedObjectReference task = client
-                    .getService()
-                    .revertToSnapshotTask(snapshot, targetHost, suppressPowerOn);
+            ManagedObjectReference task = client.getService()
+                    .revertToSnapshotTask(snapshot, targetHost,
+                            suppressPowerOn);
 
             ph.setTask(client.retrieveTaskInfo(task));
             return EVENT_RUN;
@@ -71,8 +71,8 @@ public class RestoreActions extends Actions {
         } finally {
             if (client != null) {
                 try {
-                    VMClientPool.getInstance().getPool()
-                            .returnObject(vcenter, client);
+                    VMClientPool.getInstance().getPool().returnObject(vcenter,
+                            client);
                 } catch (Exception e) {
                     logger.error("Failed to return VMware client into pool", e);
                 }

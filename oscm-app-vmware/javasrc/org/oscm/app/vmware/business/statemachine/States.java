@@ -79,8 +79,9 @@ public class States {
             logger.error("Failed to call action method '" + state.getAction()
                     + "' of state '" + state.getId() + "' for class '" + clazz
                     + "' and instance " + instanceId, e);
-            throw new StateMachineException("Runtime error in action method: "
-                    + e.getMessage(), e, instanceId, clazz, state.getAction());
+            throw new StateMachineException(
+                    "Runtime error in action method: " + e.getMessage(), e,
+                    instanceId, clazz, state.getAction());
         }
     }
 }

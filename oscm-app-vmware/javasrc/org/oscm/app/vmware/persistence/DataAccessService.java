@@ -67,6 +67,7 @@ public class DataAccessService {
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
 
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -91,6 +92,7 @@ public class DataAccessService {
                 PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setString(1, vcenter);
 
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -128,18 +130,20 @@ public class DataAccessService {
                 stmt.executeUpdate();
             }
 
-            /*
-             * String query2 =
-             * "UPDATE cluster SET load_balancer = ? WHERE tkey = ?"; try
-             * (PreparedStatement stmt = con.prepareStatement(query2);) { for
-             * (Datacenter dc : vcenter.getDatacenter()) { for (Cluster cluster
-             * : dc.getCluster()) { logger.debug("dc: " + dc.getName() +
-             * " vcenter: " + vcenter.getTkey() + " cluster: " +
-             * cluster.getName() + "  loadbalancer: " +
-             * cluster.getLoadbalancer()); stmt.setString(1,
-             * cluster.getLoadbalancer()); stmt.setInt(2, cluster.getTkey());
-             * stmt.executeUpdate(); } } }
-             */
+            String query2 = "UPDATE cluster SET load_balancer = ? WHERE tkey = ?";
+            try (PreparedStatement stmt = con.prepareStatement(query2);) {
+                for (Datacenter dc : vcenter.getDatacenter()) {
+                    for (Cluster cluster : dc.getCluster()) {
+                        logger.debug("dc: " + dc.getName() + " vcenter: "
+                                + vcenter.getTkey() + " cluster: "
+                                + cluster.getName() + "  loadbalancer: "
+                                + cluster.getLoadbalancer());
+                        stmt.setString(1, cluster.getLoadbalancer());
+                        stmt.setInt(2, cluster.getTkey());
+                        stmt.executeUpdate();
+                    }
+                }
+            }
         } catch (SQLException e) {
             logger.error("Failed to save controller configuration", e);
             throw new Exception(Messages.get(locale, "error_db_save_conf"));
@@ -153,6 +157,7 @@ public class DataAccessService {
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
 
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -185,6 +190,7 @@ public class DataAccessService {
                 PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setInt(1, vcenter.getTkey());
 
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -221,6 +227,7 @@ public class DataAccessService {
                 PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setInt(1, dc.getTkey());
 
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -252,6 +259,7 @@ public class DataAccessService {
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setString(1, vcenter);
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 credentials = new VMwareCredentials(rs.getString("url"),
@@ -291,6 +299,7 @@ public class DataAccessService {
                 PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setString(1, datacenter);
             stmt.setString(2, vcenter);
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 datacenterId = rs.getString("identifier");
@@ -320,6 +329,7 @@ public class DataAccessService {
             stmt.setString(1, cluster);
             stmt.setString(2, datacenter);
             stmt.setString(3, vcenter);
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 xml = rs.getString("load_balancer");
@@ -380,6 +390,7 @@ public class DataAccessService {
             }
 
             try (PreparedStatement stmt = con.prepareStatement(query2);) {
+                @SuppressWarnings("resource")
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     tkey = rs.getInt("TKEY");
@@ -420,6 +431,7 @@ public class DataAccessService {
         }
     }
 
+    @SuppressWarnings("resource")
     public VMwareNetwork getNetworkSettings(String vcenter, String datacenter,
             String cluster, String vlan) throws Exception {
         VMwareNetwork network = new VMwareNetwork();
@@ -462,6 +474,7 @@ public class DataAccessService {
         return network;
     }
 
+    @SuppressWarnings("resource")
     public String getVLANwithMostIPs(String vcenter, String datacenter,
             String cluster) {
 
@@ -475,6 +488,7 @@ public class DataAccessService {
             stmt.setString(1, cluster);
             stmt.setString(2, datacenter);
             stmt.setString(3, vcenter);
+            @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 if (vlans.length() > 0) {
@@ -533,6 +547,7 @@ public class DataAccessService {
      * address is marked as reserved and will therefore not be available for new
      * VMs.
      */
+    @SuppressWarnings("resource")
     public String reserveIPAddress(String vcenter, String datacenter,
             String cluster, String vlan) throws Exception {
 
@@ -614,6 +629,7 @@ public class DataAccessService {
      * The given IP address is marked as used in the VMware Controller database.
      * This functionality is used when VMs are imported.
      */
+    @SuppressWarnings("resource")
     public boolean markIPAddressAsUsed(String vcenter, String datacenter,
             String cluster, String vlan, String ipAddress) {
         logger.debug("vcenter: " + vcenter + "  datacenter: " + datacenter
@@ -699,6 +715,7 @@ public class DataAccessService {
     /**
      * Check if the given IP address is in use.
      */
+    @SuppressWarnings("resource")
     public boolean isIPAddressInUse(String vcenter, String datacenter,
             String cluster, String vlan, String ipAddress) throws Exception {
         logger.debug("vcenter: " + vcenter + "  datacenter: " + datacenter
@@ -783,6 +800,7 @@ public class DataAccessService {
     /**
      * Check if the given IP address is present in the database.
      */
+    @SuppressWarnings("resource")
     public boolean isIPAddressPresent(String vcenter, String datacenter,
             String cluster, String vlan, String ipAddress) throws Exception {
         logger.debug("vcenter: " + vcenter + "  datacenter: " + datacenter
@@ -855,6 +873,7 @@ public class DataAccessService {
     /**
      * Add the given IP address to the database and mark it as unused.
      */
+    @SuppressWarnings("resource")
     public void addIPAddress(String vcenter, String datacenter, String cluster,
             String vlan, String ipAddress) throws Exception {
         logger.debug("vcenter: " + vcenter + "  datacenter: " + datacenter

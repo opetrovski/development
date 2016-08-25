@@ -19,7 +19,12 @@ public class VMwareValue {
     private static final DecimalFormat DF = new DecimalFormat("#0.##");
 
     public enum Unit {
-        BY(0), KB(1), MB(2), GB(3), TB(4), PB(5);
+        BY(0),
+        KB(1),
+        MB(2),
+        GB(3),
+        TB(4),
+        PB(5);
         private final int factor;
 
         private Unit(int factor) {

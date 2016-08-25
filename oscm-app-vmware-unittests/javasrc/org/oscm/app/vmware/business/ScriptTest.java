@@ -46,12 +46,12 @@ public class ScriptTest {
         passwords.add("sunnyscript");
 
         // when
-        String changedScript = Script
-                .hidePasswords(script, passwords, OS.LINUX);
+        String changedScript = Script.hidePasswords(script, passwords,
+                OS.LINUX);
 
         // then
-        assertTrue(changedScript.contains("LINUX_ROOT_PWD='"
-                + Script.HIDDEN_PWD));
+        assertTrue(
+                changedScript.contains("LINUX_ROOT_PWD='" + Script.HIDDEN_PWD));
         assertTrue(changedScript.contains("SCRIPT_PWD='" + Script.HIDDEN_PWD));
         System.out.println(changedScript);
     }
@@ -80,13 +80,13 @@ public class ScriptTest {
         passwords.add("sunnyscript");
 
         // when
-        String changedScript = Script
-                .hidePasswords(script, passwords, OS.LINUX);
+        String changedScript = Script.hidePasswords(script, passwords,
+                OS.LINUX);
 
         // then
         System.out.println(changedScript);
-        assertTrue(changedScript.contains("LINUX_ROOT_PWD='"
-                + Script.HIDDEN_PWD));
+        assertTrue(
+                changedScript.contains("LINUX_ROOT_PWD='" + Script.HIDDEN_PWD));
         assertTrue(changedScript.contains("SCRIPT_PWD='" + Script.HIDDEN_PWD));
     }
 
@@ -103,8 +103,7 @@ public class ScriptTest {
                 + "set REQUESTING_USER=Julia@DarkSide.com"
                 + OS.WINDOWS.getLineEnding()
                 + "set SCRIPT_URL=http://localhost:28880/test_script.sh"
-                + OS.WINDOWS.getLineEnding()
-                + "set SCRIPT_USERID=Administrator"
+                + OS.WINDOWS.getLineEnding() + "set SCRIPT_USERID=Administrator"
                 + OS.WINDOWS.getLineEnding() + "set SCRIPT_PWD=sunnyscript"
                 + OS.WINDOWS.getLineEnding() + "set NIC1_DNS_SERVER="
                 + OS.WINDOWS.getLineEnding() + "set NIC1_DNS_SUFFIX="
@@ -121,10 +120,10 @@ public class ScriptTest {
                 OS.WINDOWS);
 
         // then
-        assertTrue(changedScript.contains("WINDOWS_LOCAL_ADMIN_PWD="
-                + Script.HIDDEN_PWD));
-        assertTrue(changedScript.contains("WINDOWS_DOMAIN_ADMIN_PWD="
-                + Script.HIDDEN_PWD));
+        assertTrue(changedScript
+                .contains("WINDOWS_LOCAL_ADMIN_PWD=" + Script.HIDDEN_PWD));
+        assertTrue(changedScript
+                .contains("WINDOWS_DOMAIN_ADMIN_PWD=" + Script.HIDDEN_PWD));
         assertTrue(changedScript.contains("SCRIPT_PWD=" + Script.HIDDEN_PWD));
         System.out.println(changedScript);
     }
@@ -142,8 +141,7 @@ public class ScriptTest {
                 + "set REQUESTING_USER=Julia@DarkSide.com"
                 + OS.WINDOWS.getLineEnding()
                 + "set SCRIPT_URL=http://localhost:28880/test_script.sh"
-                + OS.WINDOWS.getLineEnding()
-                + "set SCRIPT_USERID=Administrator"
+                + OS.WINDOWS.getLineEnding() + "set SCRIPT_USERID=Administrator"
                 + OS.WINDOWS.getLineEnding() + "set SCRIPT_PWD=sunnyscript"
                 + OS.WINDOWS.getLineEnding() + "set NIC1_DNS_SERVER="
                 + OS.WINDOWS.getLineEnding() + "set NIC1_DNS_SUFFIX="
@@ -160,10 +158,10 @@ public class ScriptTest {
                 OS.WINDOWS);
 
         // then
-        assertTrue(changedScript.contains("WINDOWS_LOCAL_ADMIN_PWD="
-                + Script.HIDDEN_PWD));
-        assertTrue(changedScript.contains("WINDOWS_DOMAIN_ADMIN_PWD="
-                + Script.HIDDEN_PWD));
+        assertTrue(changedScript
+                .contains("WINDOWS_LOCAL_ADMIN_PWD=" + Script.HIDDEN_PWD));
+        assertTrue(changedScript
+                .contains("WINDOWS_DOMAIN_ADMIN_PWD=" + Script.HIDDEN_PWD));
         assertTrue(changedScript.contains("SCRIPT_PWD=" + Script.HIDDEN_PWD));
         System.out.println(changedScript);
     }

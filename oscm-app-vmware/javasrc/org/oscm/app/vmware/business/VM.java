@@ -387,7 +387,7 @@ public class VM {
                 + ", ");
         sb.append("ipReady=" + validIp + ", ");
         for (int i = 1; i <= configuration.getNumberOfNetworkAdapter(); i++) {
-            GuestNicInfo info = getNicInfo(configuration, i);
+            GuestNicInfo info = getNicInfo(configuration.getNetworkAdapter(i));
             if (info != null) {
                 sb.append(info.getNetwork() + "=");
                 sb.append(info.getIpAddress());
@@ -434,7 +434,7 @@ public class VM {
 
     boolean isValidIp(VMPropertyHandler configuration) {
         for (int i = 1; i <= configuration.getNumberOfNetworkAdapter(); i++) {
-            GuestNicInfo info = getNicInfo(configuration, i);
+            GuestNicInfo info = getNicInfo(configuration.getNetworkAdapter(i));
             if (info == null) {
                 return false;
             }
@@ -453,15 +453,9 @@ public class VM {
         return true;
     }
 
-    GuestNicInfo getNicInfo(VMPropertyHandler configuration, int i) {
-        if (configuration.getNetworkAdapter(i) == null) {
-            return null;
-        }
+    GuestNicInfo getNicInfo(String adapter) {
         for (GuestNicInfo info : guestInfo.getNet()) {
-            if (configuration.isAdapterConfiguredByDhcp(i)) {
-                return info;
-            }
-            if (configuration.getNetworkAdapter(i).equals(info.getNetwork())) {
+            if (adapter.equals(info.getNetwork())) {
                 return info;
             }
         }

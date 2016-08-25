@@ -120,7 +120,7 @@ public class Script {
      * Declare a host name verifier that will automatically enable the
      * connection. The host name verifier is invoked during the SSL handshake.
      */
-    void disableSSL() throws Exception {
+    private void disableSSL() throws Exception {
         javax.net.ssl.HostnameVerifier verifier = new HostnameVerifier() {
             @Override
             public boolean verify(String urlHostName, SSLSession session) {
