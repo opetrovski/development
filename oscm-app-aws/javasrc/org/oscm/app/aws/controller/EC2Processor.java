@@ -211,6 +211,7 @@ public class EC2Processor {
         // Dispatch next step depending on current internal status
         switch (flowState) {
         case IMPORT_REQUESTED:
+            ec2comm.modifyInstance();
             accessInfo = Messages.get(ph.getCustomerLocale(), "accessInfo_DNS",
                     new Object[] {
                             ec2comm.getPublicDNS(ph.getAWSInstanceId()) });

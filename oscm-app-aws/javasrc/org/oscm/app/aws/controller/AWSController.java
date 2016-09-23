@@ -80,6 +80,8 @@ public class AWSController implements APPlatformController {
             if (ph.isImportOfExistingAwsInstance()) {
                 ph.setOperation(Operation.EC2_IMPORT);
                 ph.setState(FlowState.IMPORT_REQUESTED);
+                ph.setAWSInstanceId(ph.getSettings().getParameters()
+                        .get(PropertyHandler.INSTANCENAME));
             } else {
                 ph.setOperation(Operation.EC2_CREATION);
                 ph.setState(FlowState.CREATION_REQUESTED);
