@@ -63,6 +63,8 @@ public class PropertyHandler {
     public static final String AWS_INSTANCE_ID = "AWS_INSTANCE_ID";
     public static final String MAIL_FOR_COMPLETION = "MAIL_FOR_COMPLETION";
 
+    public static final String IMPORT_EXISTING_AWS_INSTANCE = "IMPORT_EXISTING_AWS_INSTANCE";
+
     /**
      * Default factory method.
      * 
@@ -168,6 +170,17 @@ public class PropertyHandler {
     }
 
     /**
+     * Returns whether the given AWS instance should be imported instead of
+     * being created.
+     * 
+     * @return true if the defined instance should be imported
+     */
+    public boolean isImportOfExistingAwsInstance() {
+        String rc = settings.getParameters().get(IMPORT_EXISTING_AWS_INSTANCE);
+        return rc != null && rc.toLowerCase().equals("true");
+    }
+
+    /**
      * Return the value of the image name parameter. The name is used to resolve
      * the AMI for instance creation.
      * 
@@ -251,7 +264,7 @@ public class PropertyHandler {
      *         <code>null</code>
      */
     public Collection<String> getSecurityGroups() {
-        Collection<String> result = new HashSet<String>();
+        Collection<String> result = new HashSet<>();
         String value = settings.getParameters().get(SECURITY_GROUP_NAMES);
         if (value != null) {
             String[] split = value.split(",");
@@ -312,7 +325,7 @@ public class PropertyHandler {
     private boolean isNullOrEmpty(String value) {
         return value == null || value.trim().length() == 0;
     }
-    
+
     /**
      * Returns the locale set as default for the customer organization.
      * 

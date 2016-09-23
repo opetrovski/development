@@ -16,6 +16,11 @@ package org.oscm.app.aws.data;
  */
 public enum FlowState {
     /**
+     * The import of an existing application instance was started.
+     */
+    IMPORT_REQUESTED,
+
+    /**
      * The creation of a new application instance was started.
      */
     CREATION_REQUESTED,
