@@ -11,6 +11,11 @@ package org.oscm.app.aws.data;
 public enum Operation {
 
     /**
+     * A subscription creation for an existing EC2 instance has been requested.
+     */
+    EC2_IMPORT,
+
+    /**
      * A new EC2 instance has been requested.
      */
     EC2_CREATION,
