@@ -17,6 +17,11 @@
       valueType="STRING">
       <LocalizedDescription locale="en">The ID of the APP controller implementation.</LocalizedDescription>
     </ParameterDefinition>
+    <ParameterDefinition configurable="true" id="IMPORT_EXISTING_AWS_INSTANCE" mandatory="false" valueType="BOOLEAN" default="false">
+      <LocalizedDescription locale="en">Import of existing AWS instances</LocalizedDescription>
+      <LocalizedDescription locale="de"/>
+      <LocalizedDescription locale="ja"/>
+    </ParameterDefinition>
     <ParameterDefinition configurable="true" default="aws([a-z0-9]){2,32}" id="INSTANCENAME_PATTERN"
       modificationType="ONE_TIME" mandatory="true" valueType="STRING">
       <LocalizedDescription locale="en">Validation pattern for instance name (regex)</LocalizedDescription>
