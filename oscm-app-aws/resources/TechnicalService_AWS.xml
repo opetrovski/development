@@ -91,6 +91,10 @@
       valueType="STRING" modificationType="ONE_TIME">
       <LocalizedDescription locale="en">Define security group(s) for the new instance</LocalizedDescription>
     </ParameterDefinition>
+    <ParameterDefinition configurable="true" default="" id="CREATE_INSTANCE_COUNT" mandatory="false"
+      valueType="INTEGER" modificationType="ONE_TIME">
+      <LocalizedDescription locale="en">Define how many instances will be created totally. Only the first instance will be mapped to a subscription.</LocalizedDescription>
+    </ParameterDefinition>
     <Operation actionURL="https://<host>:<port>/OperationService/AsynchronousOperationProxy?wsdl" id="START_VIRTUAL_SYSTEM">
       <LocalizedName locale="de">Start</LocalizedName>
       <LocalizedName locale="en">Start</LocalizedName>

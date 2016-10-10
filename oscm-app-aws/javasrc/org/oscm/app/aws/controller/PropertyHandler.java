@@ -64,6 +64,7 @@ public class PropertyHandler {
     public static final String MAIL_FOR_COMPLETION = "MAIL_FOR_COMPLETION";
 
     public static final String IMPORT_EXISTING_AWS_INSTANCE = "IMPORT_EXISTING_AWS_INSTANCE";
+    public static final String CREATE_INSTANCE_COUNT = "CREATE_INSTANCE_COUNT";
 
     /**
      * Default factory method.
@@ -143,6 +144,27 @@ public class PropertyHandler {
      */
     public String getKeyPairName() {
         return settings.getParameters().get(KEY_PAIR_NAME);
+    }
+
+    public Integer getCreateInstanceCount() {
+        Integer count = Integer.valueOf(1);
+        String c = settings.getParameters().get(CREATE_INSTANCE_COUNT);
+        if (isPositiveNumber(c)) {
+            count = Integer.valueOf(c);
+        }
+        return count;
+    }
+
+    private boolean isPositiveNumber(String text) {
+        if (text == null || text.trim().length() == 0) {
+            return false;
+        }
+        for (int i = 0; i < text.length(); i++) {
+            if (!Character.isDigit(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
