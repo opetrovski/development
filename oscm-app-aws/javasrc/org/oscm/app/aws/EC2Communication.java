@@ -261,11 +261,20 @@ public class EC2Communication {
                     Messages.getAll("error_no_reserved_instance"));
         }
 
+        int numInstance = 0;
         for (Instance instance : reservedInstances) {
             String instanceId = instance.getInstanceId();
-            ph.setAWSInstanceId(instanceId);
-            createTags(ph);
-            return;
+            if (numInstance == 0) {
+                ph.setAWSInstanceId(instanceId);
+                createTags(ph);
+                numInstance++;
+            } else {
+                String instanceName = ph.getInstanceName() + " "
+                        + Integer.toString(numInstance);
+                createCopyTags(instanceName,
+                        ph.getSettings().getOrganizationId(), instanceId);
+                numInstance++;
+            }
         }
     }
 
@@ -398,4 +407,16 @@ public class EC2Communication {
         ctr.withResources(ph.getAWSInstanceId()).setTags(tags);
         getEC2().createTags(ctr);
     }
+
+    private void createCopyTags(String instanceName, String orgId,
+            String instanceId) throws APPlatformException {
+        List<Tag> tags = new ArrayList<>();
+        tags.add(new Tag(PropertyHandler.TAG_NAME, instanceName));
+        tags.add(new Tag(PropertyHandler.TAG_ORGANIZATION_ID, orgId));
+        CreateTagsRequest ctr = new CreateTagsRequest();
+        LOGGER.debug("attach tags to resource " + instanceId);
+        ctr.withResources(instanceId).setTags(tags);
+        getEC2().createTags(ctr);
+    }
+
 }
