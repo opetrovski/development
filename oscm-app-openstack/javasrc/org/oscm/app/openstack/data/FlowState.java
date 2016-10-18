@@ -20,6 +20,8 @@ public enum FlowState {
      */
     CREATION_REQUESTED,
 
+    IMPORT_REQUESTED,
+
     /**
      * A modification of an application instance was started.
      */
@@ -96,6 +98,8 @@ public enum FlowState {
      * completed successfully.
      */
     FINISHED,
+
+    FINISHED_IMPORT,
 
     /**
      * The application instance is currently being deleted.

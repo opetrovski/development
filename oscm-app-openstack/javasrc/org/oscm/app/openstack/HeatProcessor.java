@@ -11,6 +11,7 @@ package org.oscm.app.openstack;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -20,10 +21,15 @@ import java.net.URL;
 import java.net.URLStreamHandler;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.oscm.app.openstack.controller.PropertyHandler;
 import org.oscm.app.openstack.controller.StackStatus;
 import org.oscm.app.openstack.data.CreateStackRequest;
@@ -133,7 +139,7 @@ public class HeatProcessor {
         String url = null;
         try {
             url = ph.getTemplateUrl();
-            return getText(url);
+            return getText(url, ph.getCreateVMCount());
         } catch (Exception e) {
             throw new AbortException(
                     Messages.getAll("error_" + type + "_failed_customer"),
@@ -144,21 +150,40 @@ public class HeatProcessor {
         }
     }
 
-    private static String getText(String url) throws Exception {
+    private static String getText(String url, int createVMCount)
+            throws Exception {
 
         HttpURLConnection connection = connectUsingProxy(url);
-
         StringBuilder response = new StringBuilder();
         String inputLine;
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(connection.getInputStream()));
         try {
-            while ((inputLine = in.readLine()) != null)
+            while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine).append("\n");
+            }
         } finally {
             in.close();
         }
-        return response.toString();
+
+        List<String> identifier = new ArrayList<>();
+        for (int i = 1; i <= createVMCount; i++) {
+            identifier.add(Integer.toString(i));
+        }
+
+        Properties p = new Properties();
+        VelocityContext context = new VelocityContext();
+        context.put("identifier", identifier);
+
+        StringWriter writer = new StringWriter();
+
+        VelocityEngine e = new VelocityEngine(p);
+        e.init();
+        String heatTemplate = response.toString();
+        e.evaluate(context, writer, "velocity", heatTemplate);
+        heatTemplate = writer.toString();
+        writer.close();
+        return heatTemplate;
     }
 
     private static HttpURLConnection connectUsingProxy(String restUri)

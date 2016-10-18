@@ -89,6 +89,13 @@ public class PropertyHandler {
     // Start time of operation
     public static final String START_TIME = "START_TIME";
 
+    // create a subscription from an existing VM without provisioning
+    public static final String IMPORT_EXISTING_VM = "IMPORT_EXISTING_VM";
+
+    // Create additional VMs that are not mapped to a subscription.
+    // These VMs will later be imported by the discovery tool.
+    public static final String CREATE_VM_COUNT = "CREATE_VM_COUNT";
+
     /**
      * Default constructor.
      *
@@ -169,6 +176,40 @@ public class PropertyHandler {
     }
 
     /**
+     * Returns whether an existing VM should be imported instead of being
+     * created.
+     * 
+     * @return true if an existing VM should be imported
+     */
+    public boolean isImportOfExistingVM() {
+        String rc = settings.getParameters().get(IMPORT_EXISTING_VM);
+        return rc != null && rc.toLowerCase().equals("true");
+    }
+
+    /**
+     * Returns the number of VMs that will be created additionally without being
+     * mapped to a subscription. These VMs might later be imported by the
+     * discovery tool.
+     * 
+     * @return number of VMs to be created
+     */
+    public int getCreateVMCount() {
+        int count = 1;
+        String rc = settings.getParameters().get(CREATE_VM_COUNT);
+        if (rc != null) {
+            try {
+                int number = Integer.parseInt(rc);
+                if (number > 0) {
+                    count = number;
+                }
+            } catch (NumberFormatException e) {
+                // ignore;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Returns the access information pattern used to created the instance
      * access information using the output parameters of the created stack.
      *
@@ -189,7 +230,6 @@ public class PropertyHandler {
         try {
             String url = getValidatedProperty(settings.getParameters(),
                     TEMPLATE_NAME);
-
             String baseUrl = settings.getParameters().get(TEMPLATE_BASE_URL);
             if (baseUrl == null || baseUrl.trim().length() == 0) {
                 baseUrl = getValidatedProperty(settings.getConfigSettings(),
@@ -269,7 +309,6 @@ public class PropertyHandler {
      * @return the Keystone URL
      */
     public String getKeystoneUrl() {
-
         String keystoneURL = settings.getParameters().get(KEYSTONE_API_URL);
         if (keystoneURL == null || keystoneURL.trim().length() == 0) {
             keystoneURL = getValidatedProperty(settings.getConfigSettings(),

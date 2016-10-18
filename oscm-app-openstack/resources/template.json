@@ -19,7 +19,8 @@
         }
     },
     "Resources": {
-        "Server": {
+#foreach( $id in $identifier )    
+        "Server $id": {
             "Type" : "AWS::EC2::Instance",
             "Properties" : {
                 "InstanceType" : { "Ref" : "InstanceType" },
@@ -27,6 +28,7 @@
                 "ImageId" : { "Ref" : "ImageId" }
             }
         },
+#end        
         "IP": {
             "Type": "AWS::EC2::EIP"
         },
@@ -34,7 +36,7 @@
             "Type": "AWS::EC2::EIPAssociation",
             "Properties": {
                 "EIP": { "Ref": "IP" },
-                "InstanceId": { "Ref": "Server" }
+                "InstanceId": { "Ref": "Server 1" }
             }
         }
     },

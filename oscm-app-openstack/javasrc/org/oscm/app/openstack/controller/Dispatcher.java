@@ -110,9 +110,9 @@ public class Dispatcher {
         Stack stack;
         String status;
         String statusReason;
-        List<Server> servers = new ArrayList<Server>();
+        List<Server> servers = new ArrayList<>();
         HashMap<String, Boolean> operationStatuses;
-        List<Server> successServers = new ArrayList<Server>();
+        List<Server> successServers = new ArrayList<>();
         List<Server> errorServers;
         List<LocalizedText> messages = null;
         String mail = properties.getMailForCompletion();
@@ -122,6 +122,10 @@ public class Dispatcher {
             case CREATION_REQUESTED:
                 new HeatProcessor().createStack(properties);
                 newState = FlowState.CREATING_STACK;
+                break;
+
+            case IMPORT_REQUESTED:
+                newState = FlowState.FINISHED_IMPORT;
                 break;
 
             case MODIFICATION_REQUESTED:
@@ -151,7 +155,7 @@ public class Dispatcher {
 
             case STARTING:
                 servers = new NovaProcessor().getServersDetails(properties);
-                errorServers = new ArrayList<Server>();
+                errorServers = new ArrayList<>();
                 for (Server server : servers) {
                     if (server.getStatus()
                             .equals(ServerStatus.ACTIVE.toString())) {
@@ -207,7 +211,7 @@ public class Dispatcher {
 
             case STOPPING:
                 servers = new NovaProcessor().getServersDetails(properties);
-                errorServers = new ArrayList<Server>();
+                errorServers = new ArrayList<>();
                 for (Server server : servers) {
                     if (server.getStatus()
                             .equals(ServerStatus.SHUTOFF.toString())) {
@@ -407,6 +411,10 @@ public class Dispatcher {
                 if (StackStatus.CREATE_COMPLETE.name().equals(status)) {
                     result.setAccessInfo(getAccessInfo(stack));
                 }
+                break;
+            case FINISHED_IMPORT:
+                stack = new HeatProcessor().getStackDetails(properties);
+                result.setAccessInfo(getAccessInfo(stack));
                 break;
 
             default:

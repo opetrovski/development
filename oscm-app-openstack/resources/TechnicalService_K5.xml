@@ -4,8 +4,7 @@
 <tns:TechnicalServices xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="oscm.serviceprovisioning/1.9/TechnicalService.xsd ../../oscm-serviceprovisioning/javares/TechnicalServices.xsd"
   xmlns:tns="oscm.serviceprovisioning/1.9/TechnicalService.xsd">
-  <tns:TechnicalService accessType="DIRECT" allowingOnBehalfActing="false" baseUrl=""
-    build="20140708" id="K5" loginPath=""
+  <tns:TechnicalService accessType="DIRECT" allowingOnBehalfActing="false" baseUrl="" build="20140708" id="K5" loginPath=""
     onlyOneSubscriptionPerUser="false" provisioningType="ASYNCHRONOUS"
     provisioningUrl="https://<host>:<port>/ProvisioningService/AsynchronousProvisioningProxy?wsdl"
     provisioningVersion="1.0">
@@ -171,6 +170,12 @@
       <LocalizedDescription locale="en">The address to which emails are to be sent that describe manual steps required to complete an operation. If you specify this parameter, the service controller interrupts the processing of each operation before its completion and waits for a notification about the execution of a manual action. Omit this parameter if you do not want to interrupt the processing.</LocalizedDescription>
       <LocalizedDescription locale="ja">操作を完了するために手動の手順が必要であることを知らせるemailの送信先メールアドレス。このパラメーターを指定すると、サービスコントロールは各操作の完了前に処理を中断して、手動の操作が終わったことを知らせる通知が届くまで待ちます。処理を中断したくない場合は、このパラメーターを省略してください。</LocalizedDescription>
     </ParameterDefinition>
+    <ParameterDefinition configurable="true" id="IMPORT_EXISTING_VM" mandatory="false" valueType="BOOLEAN" default="false">
+      <LocalizedDescription locale="en">Import of existing VMs</LocalizedDescription>
+    </ParameterDefinition>
+    <ParameterDefinition configurable="true" id="CREATE_VM_COUNT" mandatory="false" modificationType="ONE_TIME" valueType="INTEGER">
+      <LocalizedDescription locale="en">Define how many VMs will be created. Only the first VM is mapped to a subscription.</LocalizedDescription>
+    </ParameterDefinition>    
     <Operation actionURL="https://<host>:<port>/OperationService/AsynchronousOperationProxy?wsdl" id="START_VIRTUAL_SYSTEM">
       <LocalizedName locale="de">Start</LocalizedName>
       <LocalizedName locale="en">Start</LocalizedName>

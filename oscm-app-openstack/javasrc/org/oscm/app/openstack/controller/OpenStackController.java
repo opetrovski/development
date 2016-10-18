@@ -105,8 +105,13 @@ public class OpenStackController extends ProvisioningValidator
 
         try {
             PropertyHandler ph = new PropertyHandler(settings);
-            validateStackName(ph);
-            ph.setState(FlowState.CREATION_REQUESTED);
+
+            if (ph.isImportOfExistingVM()) {
+                ph.setState(FlowState.IMPORT_REQUESTED);
+            } else {
+                validateStackName(ph);
+                ph.setState(FlowState.CREATION_REQUESTED);
+            }
 
             // Return generated instance information
             InstanceDescription id = new InstanceDescription();

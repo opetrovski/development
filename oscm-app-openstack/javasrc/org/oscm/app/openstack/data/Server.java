@@ -13,7 +13,7 @@ package org.oscm.app.openstack.data;
  *
  */
 public class Server {
-    private String id;
+    public String id;
     private String name;
     private String status;
 
