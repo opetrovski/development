@@ -462,6 +462,7 @@ public class Dispatcher {
         // provisioning operation is FINISHED or DESTROYED. If this
         // is the case, APP stops polling for the instance status.
         result.setIsReady(properties.getState() == FlowState.FINISHED
+                || properties.getState() == FlowState.FINISHED_IMPORT
                 || properties.getState() == FlowState.DESTROYED);
 
         result.setRunWithTimer(properties.getState() != FlowState.MANUAL);
