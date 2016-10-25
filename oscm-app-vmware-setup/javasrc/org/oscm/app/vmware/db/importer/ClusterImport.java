@@ -53,9 +53,11 @@ public class ClusterImport extends GenericImport {
                 String clusterName = line.get(ClusterCSV.COL_CLUSTER_NAME);
                 String vcenter = line.get(ClusterCSV.COL_VCENTER);
                 String datacenter = line.get(ClusterCSV.COL_DATACENTER);
-
+                String hosts = line.get(ClusterCSV.COL_BLACKLIST_HOSTS);
+                String storages = line.get(ClusterCSV.COL_BLACKLIST_STORAGES);
                 try {
-                    addTableRow(conn, vcenter, clusterName, datacenter);
+                    addTableRow(conn, vcenter, clusterName, datacenter, hosts,
+                            storages);
                 } catch (Exception e) {
                     logger.error("failed to add row:  " + vcenter + " "
                             + datacenter + " " + clusterName);
@@ -89,14 +91,36 @@ public class ClusterImport extends GenericImport {
         }
     }
 
-    private void addTableRow(Connection con, String vcenter, String clusterName,
-            String datacenter) throws Exception {
+    private void addTableRow(Connection con, String vcenter,
+            String clusterName, String datacenter, String hosts, String storages)
+            throws Exception {
         int dcKey = getDatacenterKey(con, vcenter, datacenter);
-        String loadbalancer = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><essvcenter><balancer class=\"org.oscm.app.vmware.business.balancer.DynamicEquipartitionHostBalancer\" cpuWeight=\"\" memoryWeight=\"\" vmWeight=\"\"/></essvcenter>";
+
+        StringBuilder loadbalancer = new StringBuilder(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><essvcenter><balancer class=\"org.oscm.app.vmware.business.balancer.DynamicEquipartitionHostBalancer\" cpuWeight=\"\" memoryWeight=\"\" vmWeight=\"\" >");
+        if (hosts != null && !"".equals(hosts)) {
+            String[] hosta = hosts.split("#");
+            for (String host : hosta) {
+                loadbalancer.append("<blacklisthost>" + host
+                        + "</blacklisthost>");
+            }
+
+        }
+        if (storages != null && !"".equals(storages)) {
+            String[] storagea = storages.split("#");
+            for (String storage : storagea) {
+                loadbalancer.append("<blackliststorage>" + storage
+                        + "</blackliststorage>");
+            }
+
+        }
+
+        loadbalancer.append("</balancer></essvcenter>");
+
         String query = "insert into cluster (TKEY, NAME, LOAD_BALANCER, DATACENTER_TKEY) values (DEFAULT, ?, ?, ?)";
         try (PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setString(1, clusterName);
-            stmt.setString(2, loadbalancer);
+            stmt.setString(2, loadbalancer.toString());
             stmt.setInt(3, dcKey);
             stmt.execute();
         }
@@ -121,13 +145,13 @@ public class ClusterImport extends GenericImport {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException(
-                    "Failed to retrieve datacenter " + datacenter, e);
+            throw new RuntimeException("Failed to retrieve datacenter "
+                    + datacenter, e);
         }
 
         if (dcKey == -1) {
-            throw new RuntimeException(
-                    "Failed to retrieve datacenter " + datacenter);
+            throw new RuntimeException("Failed to retrieve datacenter "
+                    + datacenter);
         }
         return dcKey;
     }
