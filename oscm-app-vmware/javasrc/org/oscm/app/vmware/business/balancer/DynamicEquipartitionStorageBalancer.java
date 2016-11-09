@@ -65,7 +65,7 @@ public class DynamicEquipartitionStorageBalancer extends StorageBalancer {
         double maxFreeSpace = 0.0;
         for (VMwareStorage storage : inventory.getStorageByHost(targetHost)) {
             if (blacklistStorages.contains(storage.getName().toLowerCase())) {
-                logger.debug("Blacklisted Host: " + storage.getName());
+                logger.debug("Blacklisted Storage: " + storage.getName());
                 continue;
             }
 

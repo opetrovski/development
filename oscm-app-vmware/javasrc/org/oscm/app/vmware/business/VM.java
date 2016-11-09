@@ -585,7 +585,6 @@ public class VM {
      * @return fully qualified domain name
      */
     public String getFQDN() {
-        // TODO do not remove method. Please implement, return FQDN
-        return "";
+        return guestInfo.getHostName();
     }
 }
