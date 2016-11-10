@@ -557,6 +557,10 @@ public class VM {
         return configSpec.getHardware().getNumCoresPerSocket();
     }
 
+    public String getMemoryMB() {
+        return Integer.toString(configSpec.getHardware().getMemoryMB());
+    }
+
     public String getCPUModel() throws Exception {
         String datacenter = paramHandler.getTargetDatacenter();
         ManagedObjectReference dataCenterRef = vmw.getServiceUtil()
