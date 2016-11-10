@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vmware.vim25.GuestInfo;
 import com.vmware.vim25.GuestNicInfo;
+import com.vmware.vim25.GuestStackInfo;
 import com.vmware.vim25.ManagedObjectReference;
 import com.vmware.vim25.TaskInfo;
 import com.vmware.vim25.VimPortType;
@@ -582,9 +583,17 @@ public class VM {
     }
 
     /**
-     * @return fully qualified domain name
+     * @return fully qualified domain name without hostname
      */
     public String getFQDN() {
-        return guestInfo.getHostName();
+        String domain = "";
+        for (GuestStackInfo stackInfo : guestInfo.getIpStack()) {
+            domain = stackInfo.getDnsConfig().getDomainName();
+            if (domain != null && domain.length() > 0) {
+                break;
+            }
+        }
+
+        return domain;
     }
 }
