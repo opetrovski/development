@@ -135,16 +135,6 @@ public class VMPropertyHandler {
     public static final String CTL_CMDB_FOLDER = "CMDB_FOLDER";
 
     /**
-     * NOW-IT Nagios integration
-     */
-    public static final String CTL_NAGIOS_SERVER = "NAGIOS_SERVER";
-
-    /**
-     * NOW-IT Nagios integration
-     */
-    public static final String CTL_NAGIOS_SITE = "NAGIOS_SITE";
-
-    /**
      * The key of the last invoked vSphere task. This vSphere identifier
      * references an asynchronous task in order to retrieve the status of that
      * task later on.
@@ -433,7 +423,7 @@ public class VMPropertyHandler {
      */
     public List<String> getDataDiskMountPointParameterKeys() {
         String regex = TS_DATA_DISK_TARGET.replace("#", "").concat("\\d+");
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (String key : settings.getParameters().keySet()) {
             if (key.matches(regex)) {
                 result.add(key);
@@ -449,7 +439,7 @@ public class VMPropertyHandler {
      */
     public List<String> getDataDiskSizeParameterKeys() {
         String regex = TS_DATA_DISK_SIZE.replace("#", "").concat("\\d+");
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (String key : settings.getParameters().keySet()) {
             if (key.matches(regex)) {
                 result.add(key);
@@ -645,7 +635,7 @@ public class VMPropertyHandler {
      * @return a list of Long values for all defined data disks
      */
     public Double[] getDataDisksMB() {
-        List<Double> ddlist = new ArrayList<Double>();
+        List<Double> ddlist = new ArrayList<>();
         for (int i = 1; i <= 999; i++) {
             String diskPrefix = TS_DATA_DISK_SIZE.replace("#",
                     Integer.toString(i));
@@ -713,7 +703,7 @@ public class VMPropertyHandler {
             return das.getVLANs(cluster);
         } catch (Exception e) {
             logger.error("Failed to retrieve VLAN list.", e);
-            return new ArrayList<VLAN>();
+            return new ArrayList<>();
         }
     }
 
@@ -775,7 +765,7 @@ public class VMPropertyHandler {
             vcenter = das.getVCenter();
         } catch (Exception e) {
             logger.error("Failed to retrieve vCenter server list.", e);
-            vcenter = new ArrayList<VCenter>();
+            vcenter = new ArrayList<>();
         }
 
         return vcenter;
