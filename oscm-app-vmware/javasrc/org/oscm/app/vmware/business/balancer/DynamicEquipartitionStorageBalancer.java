@@ -42,15 +42,15 @@ public class DynamicEquipartitionStorageBalancer extends StorageBalancer {
         VMwareStorage selectedStorage = null;
         XMLConfiguration xmlConfig = new XMLHostConfiguration();
         try {
-            xmlConfig.load(new StringReader(properties
-                    .getHostLoadBalancerConfig()));
+            xmlConfig.load(
+                    new StringReader(properties.getHostLoadBalancerConfig()));
         } catch (ConfigurationException e) {
             throw new APPlatformException(e.getMessage());
         }
 
         List<Object> storages = xmlConfig.configurationAt(ELEMENT_BALANCER)
                 .getList(ELEMENT_BLACKLIST_STORAGE);
-        blacklistStorages = new ArrayList<String>(storages.size());
+        blacklistStorages = new ArrayList<>(storages.size());
         for (Object blstorage : storages) {
             blacklistStorages.add(blstorage.toString().toLowerCase());
         }
@@ -71,9 +71,12 @@ public class DynamicEquipartitionStorageBalancer extends StorageBalancer {
 
             if (storage.getFree() > maxFreeSpace) {
                 logger.debug("New Selected Storage: " + storage.getName()
-                        + ". Free Space is " + storage.getFree() + "MB.");
+                        + ". Free Space is " + storage.getFree() + " MB");
                 selectedStorage = storage;
                 maxFreeSpace = storage.getFree();
+            } else {
+                logger.trace("skipped storage " + storage.getName()
+                        + "  free space:" + storage.getFree() + " MB");
             }
         }
 

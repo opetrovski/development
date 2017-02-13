@@ -17,6 +17,7 @@ import org.oscm.app.vmware.business.VMwareValue.Unit;
 import org.oscm.app.vmware.business.balancer.LoadBalancerConfiguration;
 import org.oscm.app.vmware.business.model.VMwareHost;
 import org.oscm.app.vmware.business.model.VMwareStorage;
+import org.oscm.app.vmware.business.model.VMwareVirtualMachine;
 import org.oscm.app.vmware.i18n.Messages;
 import org.oscm.app.vmware.remote.vmware.ManagedObjectAccessor;
 import org.oscm.app.vmware.remote.vmware.VMwareClient;
@@ -510,11 +511,9 @@ public class Template {
 
         VMwareDatacenterInventory inventory = new VMwareDatacenterInventory();
         for (ManagedObjectReference hostRef : hostMoRefs) {
-            List<DynamicProperty> dps = serviceUtil
-                    .getDynamicProperty(hostRef,
-                            new String[] { "name",
-                                    "summary.hardware.memorySize",
-                                    "summary.hardware.numCpuCores" });
+            List<DynamicProperty> dps = serviceUtil.getDynamicProperty(hostRef,
+                    new String[] { "name", "summary.hardware.memorySize",
+                            "summary.hardware.numCpuCores" });
             String host = "";
             for (DynamicProperty dp : dps) {
                 String key = dp.getName();
@@ -528,17 +527,19 @@ public class Template {
             List<ManagedObjectReference> storageRefs = (List<ManagedObjectReference>) serviceUtil
                     .getDynamicProperty(hostRef, "datastore");
             for (ManagedObjectReference storageRef : storageRefs) {
-                dps = serviceUtil
-                        .getDynamicProperty(storageRef,
-                                new String[] { "summary.name",
-                                        "summary.capacity",
-                                        "summary.freeSpace" });
+                dps = serviceUtil.getDynamicProperty(storageRef,
+                        new String[] { "summary.name", "summary.capacity",
+                                "summary.freeSpace" });
 
                 String storageName = "";
+                String storageFreeSpace = "";
                 for (DynamicProperty dp : dps) {
                     String key = dp.getName();
                     if ("summary.name".equals(key) && dp.getVal() != null) {
                         storageName = dp.getVal().toString();
+                    } else if ("summary.freeSpace".equals(key)
+                            && dp.getVal() != null) {
+                        storageFreeSpace = dp.getVal().toString();
                     }
                 }
 
@@ -555,8 +556,9 @@ public class Template {
                             && !hm.getMountInfo().getAccessMode()
                                     .equals("readOnly")) {
 
-                        logger.debug("addStorage host: " + host + " storage: "
-                                + storageName);
+                        logger.trace("addStorage host: " + host + "  storage: "
+                                + storageName + "  free space: "
+                                + storageFreeSpace);
                         inventory.addStorage(host, dps);
                     }
                 }
@@ -564,13 +566,13 @@ public class Template {
 
             List<ManagedObjectReference> vmRefs = (List<ManagedObjectReference>) serviceUtil
                     .getDynamicProperty(hostRef, "vm");
+            VMwareVirtualMachine vm = null;
             for (ManagedObjectReference vmRef : vmRefs) {
                 dps = serviceUtil.getDynamicProperty(vmRef,
                         new String[] { "name", "summary.config.memorySizeMB",
                                 "summary.config.numCpu", "runtime.host" });
                 inventory.addVirtualMachine(dps, serviceUtil);
             }
-
         }
 
         inventory.initialize();
@@ -580,7 +582,7 @@ public class Template {
     @SuppressWarnings("unchecked")
     public HashMap<String, String> getAnnotationAttributes(String templateName)
             throws Exception {
-        HashMap<String, String> attributes = new HashMap<String, String>();
+        HashMap<String, String> attributes = new HashMap<>();
 
         ManagedObjectReference customFieldsManager = vmw.getConnection()
                 .getServiceContent().getCustomFieldsManager();

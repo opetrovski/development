@@ -38,7 +38,7 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
     public void setConfiguration(HierarchicalConfiguration xmlConfig) {
         super.setConfiguration(xmlConfig);
         List<Object> hosts = xmlConfig.getList(ELEMENT_BLACKLIST_HOST);
-        blacklistHosts = new ArrayList<String>(hosts.size());
+        blacklistHosts = new ArrayList<>(hosts.size());
         for (Object blhost : hosts) {
             blacklistHosts.add(blhost.toString().toLowerCase());
         }
@@ -50,7 +50,7 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
             throws APPlatformException {
 
         VMwareHost selectedHost = null;
-        int minVM = Integer.MAX_VALUE;
+        double maxRAM = 0.0;
 
         Collection<VMwareHost> hosts = inventory.getHosts();
 
@@ -59,12 +59,17 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
                 logger.debug("Blacklisted Host: " + host.getName());
                 continue;
             }
-            int numVM = host.getAllocatedVMs();
-            if (numVM < minVM) {
+
+            double freeRAM = host.getMemorySizeMB()
+                    - host.getAllocatedMemoryMB();
+            if (freeRAM > maxRAM) {
                 logger.debug("New Selected Host: " + host.getName()
-                        + ". Number of VMs is " + numVM + ".");
+                        + ". Amount of RAM is " + freeRAM);
                 selectedHost = host;
-                minVM = numVM;
+                maxRAM = freeRAM;
+            } else {
+                logger.trace("Skipped Host: " + host.getName()
+                        + "  Amount of RAM is " + freeRAM);
             }
         }
 
