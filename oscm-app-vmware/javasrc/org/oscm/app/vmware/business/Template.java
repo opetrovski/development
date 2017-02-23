@@ -521,7 +521,7 @@ public class Template {
                     host = dp.getVal().toString();
                 }
             }
-            logger.debug("addHostSystem host: " + host);
+
             inventory.addHostSystem(dps);
 
             List<ManagedObjectReference> storageRefs = (List<ManagedObjectReference>) serviceUtil
@@ -530,19 +530,6 @@ public class Template {
                 dps = serviceUtil.getDynamicProperty(storageRef,
                         new String[] { "summary.name", "summary.capacity",
                                 "summary.freeSpace" });
-
-                String storageName = "";
-                String storageFreeSpace = "";
-                for (DynamicProperty dp : dps) {
-                    String key = dp.getName();
-                    if ("summary.name".equals(key) && dp.getVal() != null) {
-                        storageName = dp.getVal().toString();
-                    } else if ("summary.freeSpace".equals(key)
-                            && dp.getVal() != null) {
-                        storageFreeSpace = dp.getVal().toString();
-                    }
-                }
-
                 List<DatastoreHostMount> hostMounts = (List<DatastoreHostMount>) serviceUtil
                         .getDynamicProperty(storageRef, "host");
 
@@ -555,10 +542,6 @@ public class Template {
                             && hm.getMountInfo().isMounted().booleanValue()
                             && !hm.getMountInfo().getAccessMode()
                                     .equals("readOnly")) {
-
-                        logger.trace("addStorage host: " + host + "  storage: "
-                                + storageName + "  free space: "
-                                + storageFreeSpace);
                         inventory.addStorage(host, dps);
                     }
                 }
@@ -570,7 +553,8 @@ public class Template {
             for (ManagedObjectReference vmRef : vmRefs) {
                 dps = serviceUtil.getDynamicProperty(vmRef,
                         new String[] { "name", "summary.config.memorySizeMB",
-                                "summary.config.numCpu", "runtime.host" });
+                                "summary.config.numCpu", "runtime.host",
+                                "runtime.powerState" });
                 inventory.addVirtualMachine(dps, serviceUtil);
             }
         }

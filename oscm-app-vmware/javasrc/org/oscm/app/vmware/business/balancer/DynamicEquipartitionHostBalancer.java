@@ -55,21 +55,22 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
         Collection<VMwareHost> hosts = inventory.getHosts();
 
         for (VMwareHost host : hosts) {
+
+            double freeRAM = host.getMemorySizeMB()
+                    - host.getAllocatedMemoryMB();
+
+            logger.debug("Evaluate Host:" + host.getName() + "  free RAM: "
+                    + freeRAM + "  current max RAM: " + maxRAM);
+
             if (blacklistHosts.contains(host.getName().toLowerCase())) {
                 logger.debug("Blacklisted Host: " + host.getName());
                 continue;
             }
 
-            double freeRAM = host.getMemorySizeMB()
-                    - host.getAllocatedMemoryMB();
             if (freeRAM > maxRAM) {
-                logger.debug("New Selected Host: " + host.getName()
-                        + ". Amount of RAM is " + freeRAM);
+                logger.debug("New preferred Host: " + host.getName());
                 selectedHost = host;
                 maxRAM = freeRAM;
-            } else {
-                logger.trace("Skipped Host: " + host.getName()
-                        + "  Amount of RAM is " + freeRAM);
             }
         }
 

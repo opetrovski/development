@@ -40,6 +40,8 @@ public class VMwareHost {
     private int allocatedVMs;
     private int allocatedCPUs;
     private long allocatedMemory;
+    private long usedMemory;
+    private long allocatedReservedMemory;
 
     private VMwareValue vmLimit = DEFAULT_VM_LIMIT;
     private VMwareValue cpuLimit = DEFAULT_CPU_LIMIT;
@@ -65,6 +67,22 @@ public class VMwareHost {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setMemoryUsageMB(long value) {
+        usedMemory = value;
+    }
+
+    public void setMemoryAllocationReservationMB(long value) {
+        allocatedReservedMemory = value;
+    }
+
+    public long getMemoryUsageMB() {
+        return usedMemory;
+    }
+
+    public long getMemoryAllocationReservationMB() {
+        return allocatedReservedMemory;
     }
 
     public boolean checkVmLimit() {

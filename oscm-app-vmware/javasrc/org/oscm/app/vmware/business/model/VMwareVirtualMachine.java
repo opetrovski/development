@@ -18,6 +18,24 @@ public class VMwareVirtualMachine {
     private String hostName;
     private int numCpu;
     private int memorySizeMB;
+    private boolean isRunning;
+    private boolean isTemplate;
+
+    public boolean isTemplate() {
+        return isTemplate;
+    }
+
+    public void setTemplate(boolean isTemplate) {
+        this.isTemplate = isTemplate;
+    }
+
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void setRunning(boolean isRunning) {
+        this.isRunning = isRunning;
+    }
 
     public String getName() {
         return name;

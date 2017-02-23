@@ -64,19 +64,20 @@ public class DynamicEquipartitionStorageBalancer extends StorageBalancer {
 
         double maxFreeSpace = 0.0;
         for (VMwareStorage storage : inventory.getStorageByHost(targetHost)) {
+
+            logger.debug("Evaluate Storage:" + storage.getName()
+                    + "  free space: " + storage.getFree()
+                    + "  current max space: " + maxFreeSpace);
+
             if (blacklistStorages.contains(storage.getName().toLowerCase())) {
                 logger.debug("Blacklisted Storage: " + storage.getName());
                 continue;
             }
 
             if (storage.getFree() > maxFreeSpace) {
-                logger.debug("New Selected Storage: " + storage.getName()
-                        + ". Free Space is " + storage.getFree() + " MB");
+                logger.debug("New preferred storage: " + storage.getName());
                 selectedStorage = storage;
                 maxFreeSpace = storage.getFree();
-            } else {
-                logger.trace("skipped storage " + storage.getName()
-                        + "  free space:" + storage.getFree() + " MB");
             }
         }
 
