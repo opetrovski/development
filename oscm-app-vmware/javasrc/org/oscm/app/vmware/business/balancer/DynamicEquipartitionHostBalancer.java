@@ -56,11 +56,13 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
 
         for (VMwareHost host : hosts) {
 
-            double freeRAM = host.getMemorySizeMB()
-                    - host.getAllocatedMemoryMB();
+            // double freeRAM = host.getMemorySizeMB() -
+            // host.getAllocatedMemoryMB();
+            double freeRAM = host.getMemorySizeMB() - host.getMemoryUsageMB();
 
-            logger.debug("Evaluate Host:" + host.getName() + "  free RAM: "
-                    + freeRAM + "  current max RAM: " + maxRAM);
+            logger.debug(
+                    "Evaluate Host:" + host.getName() + "  free physical RAM: "
+                            + freeRAM + "  current max RAM: " + maxRAM);
 
             if (blacklistHosts.contains(host.getName().toLowerCase())) {
                 logger.debug("Blacklisted Host: " + host.getName());
@@ -75,7 +77,8 @@ public class DynamicEquipartitionHostBalancer extends HostBalancer {
         }
 
         if (selectedHost == null) {
-            throw new APPlatformException(Messages.getAll("error_outof_host"));
+            throw new APPlatformException(
+                    Messages.get(properties.getLocale(), "error_outof_host"));
         }
 
         return selectedHost;

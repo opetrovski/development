@@ -17,7 +17,6 @@ import org.oscm.app.vmware.business.VMwareValue.Unit;
 import org.oscm.app.vmware.business.balancer.LoadBalancerConfiguration;
 import org.oscm.app.vmware.business.model.VMwareHost;
 import org.oscm.app.vmware.business.model.VMwareStorage;
-import org.oscm.app.vmware.business.model.VMwareVirtualMachine;
 import org.oscm.app.vmware.i18n.Messages;
 import org.oscm.app.vmware.remote.vmware.ManagedObjectAccessor;
 import org.oscm.app.vmware.remote.vmware.VMwareClient;
@@ -513,7 +512,9 @@ public class Template {
         for (ManagedObjectReference hostRef : hostMoRefs) {
             List<DynamicProperty> dps = serviceUtil.getDynamicProperty(hostRef,
                     new String[] { "name", "summary.hardware.memorySize",
-                            "summary.hardware.numCpuCores" });
+                            "summary.hardware.numCpuCores",
+                            "systemResources.config.memoryAllocation.reservation",
+                            "summary.quickStats.overallMemoryUsage" });
             String host = "";
             for (DynamicProperty dp : dps) {
                 String key = dp.getName();
@@ -547,19 +548,22 @@ public class Template {
                 }
             }
 
-            List<ManagedObjectReference> vmRefs = (List<ManagedObjectReference>) serviceUtil
-                    .getDynamicProperty(hostRef, "vm");
-            VMwareVirtualMachine vm = null;
-            for (ManagedObjectReference vmRef : vmRefs) {
-                dps = serviceUtil.getDynamicProperty(vmRef,
-                        new String[] { "name", "summary.config.memorySizeMB",
-                                "summary.config.numCpu", "runtime.host",
-                                "runtime.powerState" });
-                inventory.addVirtualMachine(dps, serviceUtil);
-            }
+            /*
+             * REMOVE THIS FOR NOW-IT FOR PERFORMANCE IMPROVEMENT. THIS IS NOT
+             * NEEDED WHEN THE DYNAMIC LOADBALANCER IS USED. TODO: ONLY PARSE
+             * VMs IF THE STATIC LOADBALANCER IS USED.
+             * List<ManagedObjectReference> vmRefs =
+             * (List<ManagedObjectReference>) serviceUtil
+             * .getDynamicProperty(hostRef, "vm"); VMwareVirtualMachine vm =
+             * null; for (ManagedObjectReference vmRef : vmRefs) { dps =
+             * serviceUtil.getDynamicProperty(vmRef, new String[] { "name",
+             * "summary.config.memorySizeMB", "summary.config.numCpu",
+             * "runtime.host", "runtime.powerState" });
+             * inventory.addVirtualMachine(dps, serviceUtil); }
+             */
         }
 
-        inventory.initialize();
+        // inventory.initialize();
         return inventory;
     }
 

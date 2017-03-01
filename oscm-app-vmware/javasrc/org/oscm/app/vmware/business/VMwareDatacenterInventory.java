@@ -108,6 +108,7 @@ public class VMwareDatacenterInventory {
                 result.setCpuCores(Integer.parseInt(dp.getVal().toString()));
             } else if ("summary.quickStats.overallMemoryUsage".equals(key)
                     && dp.getVal() != null) {
+                // currently used physical RAM on host
                 result.setMemoryUsageMB(Long.parseLong(dp.getVal().toString()));
             } else if ("systemResources.config.memoryAllocation.reservation"
                     .equals(key) && dp.getVal() != null) {

@@ -82,7 +82,7 @@ public class CreateActions extends Actions {
         } catch (Exception e) {
             logger.error("Failed to create VM of instance " + instanceId, e);
             String message = Messages.get(ph.getLocale(), "error_create_vm",
-                    new Object[] { instanceId });
+                    new Object[] { e.getMessage() });
             ph.setSetting(VMPropertyHandler.SM_ERROR_MESSAGE, message);
             return EVENT_FAILED;
         } finally {

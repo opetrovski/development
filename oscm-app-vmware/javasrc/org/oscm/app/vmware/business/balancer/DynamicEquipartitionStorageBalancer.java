@@ -87,6 +87,7 @@ public class DynamicEquipartitionStorageBalancer extends StorageBalancer {
             return selectedStorage;
         }
 
-        throw new APPlatformException(Messages.getAll("error_outof_storage"));
+        throw new APPlatformException(
+                Messages.get(properties.getLocale(), "error_outof_storage"));
     }
 }
