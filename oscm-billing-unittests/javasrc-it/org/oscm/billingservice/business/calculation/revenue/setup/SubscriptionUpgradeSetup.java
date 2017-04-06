@@ -1,6 +1,6 @@
 /*******************************************************************************
  *                                                                              
- *  Copyright FUJITSU LIMITED 2016                                             
+ *  Copyright FUJITSU LIMITED 2017
  *                                                                                                                                 
  *  Creation Date: 27.03.2013                                                      
  *                                                                              
@@ -220,6 +220,7 @@ public class SubscriptionUpgradeSetup {
         container.addBean(new OperationRecordDao());
         container.addBean(new OperationRecordServiceLocalBean());
         container.addBean(Mockito.mock(SubscriptionSearchService.class));
+        container.addBean(Mockito.mock(org.oscm.internal.intf.TriggerService.class));
         container.addBean(new SubscriptionServiceBean());
         container.addBean(new ServiceProvisioningServiceBean());
         container.addBean(mock(MarketplaceCacheService.class));

@@ -1,6 +1,6 @@
 /*******************************************************************************
  *                                                                              
- *  Copyright FUJITSU LIMITED 2016                                             
+ *  Copyright FUJITSU LIMITED 2017
  *                                                                              
  *  Creation Date: 03.12.2012                                                      
  *                                                                              
@@ -70,6 +70,7 @@ import org.oscm.interceptor.DateFactory;
 import org.oscm.internal.accountmgmt.AccountServiceManagementBean;
 import org.oscm.internal.intf.MarketplaceCacheService;
 import org.oscm.internal.intf.SubscriptionSearchService;
+import org.oscm.internal.intf.TriggerService;
 import org.oscm.internal.marketplace.MarketplaceServiceManagePartnerBean;
 import org.oscm.internal.pricing.PricingServiceBean;
 import org.oscm.internal.service.PublishServiceBean;
@@ -308,6 +309,7 @@ public class BillingIntegrationTestBase extends StaticEJBTestBase {
         container.addBean(new OperationRecordDao());
         container.addBean(new OperationRecordServiceLocalBean());
         container.addBean(mock(SubscriptionSearchService.class));
+        container.addBean(mock(TriggerService.class));
         container.addBean(new SubscriptionServiceBean());
         container.addBean(new ServiceProvisioningServiceBean());
         container.addBean(new ServiceProvisioningPartnerServiceLocalBean());

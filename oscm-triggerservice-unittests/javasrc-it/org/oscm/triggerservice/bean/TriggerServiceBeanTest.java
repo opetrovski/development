@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- *  Copyright FUJITSU LIMITED 2016                                           
+ *  Copyright FUJITSU LIMITED 2017                                           
  *                                                                                                                                  
  *  Creation Date: 17.06.15 09:59
  *
@@ -475,5 +475,14 @@ public class TriggerServiceBeanTest {
                 triggerProcess);
         when(voService.getParameters()).thenReturn(parameterList);
         triggerService.updateActionParameters(VALID_KEY, parameters);
+    }
+
+    @Test
+    public void test() {
+        //given
+
+        //when
+        triggerService.getAllActionsForOrganizationRelatedSubscription();
+        //then
     }
 }
