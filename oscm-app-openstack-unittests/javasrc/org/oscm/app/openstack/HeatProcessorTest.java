@@ -11,6 +11,12 @@ package org.oscm.app.openstack;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,16 +25,24 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.naming.NamingException;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.oscm.app.openstack.controller.PropertyHandler;
 import org.oscm.app.openstack.controller.StackStatus;
 import org.oscm.app.openstack.data.Stack;
 import org.oscm.app.openstack.exceptions.HeatException;
+import org.oscm.app.v2_0.data.PasswordAuthentication;
 import org.oscm.app.v2_0.data.ProvisioningSettings;
 import org.oscm.app.v2_0.data.Setting;
+import org.oscm.app.v2_0.data.Template;
+import org.oscm.app.v2_0.exceptions.APPlatformException;
 import org.oscm.app.v2_0.exceptions.AbortException;
+import org.oscm.app.v2_0.exceptions.AuthenticationException;
 import org.oscm.app.v2_0.exceptions.InstanceNotAliveException;
+import org.oscm.app.v2_0.intf.APPTemplateService;
 
 /**
  * @author farmaki
@@ -73,7 +87,7 @@ public class HeatProcessorTest {
         createBasicParameters(instanceName, "fosi_v2.json", "http");
 
         // when
-        new HeatProcessor().createStack(paramHandler);
+        givenHeatProcessor().createStack(paramHandler);
 
         // then
         assertEquals("idValue", paramHandler.getStackId());
@@ -87,7 +101,7 @@ public class HeatProcessorTest {
         createBasicParameters(instanceName, "fosi_v2.json", "https");
 
         // when
-        new HeatProcessor().createStack(paramHandler);
+        givenHeatProcessor().createStack(paramHandler);
 
         // then
         assertEquals("idValue", paramHandler.getStackId());
@@ -103,7 +117,21 @@ public class HeatProcessorTest {
                 PropertyHandler.TEMPLATE_BASE_URL,
                 "estfarmaki2:8880/templates/"));
         // when
-        new HeatProcessor().createStack(paramHandler);
+        givenAnyHeatProcessor_NoTemplate().createStack(paramHandler);
+    }
+
+    @Test()
+    public void createStack_https_localTemplate() throws Exception {
+        // given
+        final String instanceName = "Instance4";
+        createBasicParameters(instanceName, "fosi_v2.json", "https");
+        configSettings.put(PropertyHandler.TEMPLATE_BASE_URL, new Setting(
+                PropertyHandler.TEMPLATE_BASE_URL,
+                "estfarmaki2:8880/templates/"));
+
+        // when
+        givenHeatProcessor().createStack(paramHandler);
+
     }
 
     @Test
@@ -115,8 +143,23 @@ public class HeatProcessorTest {
                 PropertyHandler.TEMPLATE_BASE_URL,
                 "https://objectstorage/v1/templates/"));
 
+        Template t = new Template();
+        t.setContent(MockURLStreamHandler.respTemplatesFosi_v2().getBytes());
+
+        final APPTemplateService service = Mockito
+                .mock(APPTemplateService.class);
+        when(
+                service.getTemplate(anyString(), anyString(),
+                        any(PasswordAuthentication.class))).thenReturn(t);
+
         // when
-        new HeatProcessor().createStack(paramHandler);
+        new HeatProcessor() {
+            @Override
+            protected APPTemplateService getTemplateService()
+                    throws NamingException {
+                return service;
+            }
+        }.createStack(paramHandler);
 
         // then
         assertEquals("idValue", paramHandler.getStackId());
@@ -135,7 +178,7 @@ public class HeatProcessorTest {
         streamHandler.put("/stacks/Instance4-1905561714", connection);
 
         // when
-        new HeatProcessor().createStack(paramHandler);
+        givenHeatProcessor().createStack(paramHandler);
     }
 
     @Test
@@ -145,7 +188,7 @@ public class HeatProcessorTest {
         createBasicParameters(instanceName, "fosi_v2.json", "http");
 
         // when
-        Stack result = new HeatProcessor().getStackDetails(paramHandler);
+        Stack result = givenHeatProcessor().getStackDetails(paramHandler);
 
         // then
         assertEquals("sID", paramHandler.getStackId());
@@ -180,7 +223,7 @@ public class HeatProcessorTest {
 
         // when
         try {
-            new HeatProcessor().getStackDetails(paramHandler);
+            givenHeatProcessor().getStackDetails(paramHandler);
             assertTrue("Test must fail with HeatException!", false);
         } catch (HeatException ex) {
             // then
@@ -198,7 +241,7 @@ public class HeatProcessorTest {
         createBasicParameters(instanceName, "fosi_v2.json", "http");
 
         // when
-        boolean result = new HeatProcessor().resumeStack(paramHandler);
+        boolean result = givenHeatProcessor().resumeStack(paramHandler);
 
         // then
         assertFalse(result);
@@ -218,7 +261,7 @@ public class HeatProcessorTest {
                                 false)));
 
         // when
-        boolean result = new HeatProcessor().resumeStack(paramHandler);
+        boolean result = givenHeatProcessor().resumeStack(paramHandler);
 
         // then
         assertTrue(result);
@@ -244,7 +287,7 @@ public class HeatProcessorTest {
                                 InstanceType.NOVA.getString())));
 
         // when
-        boolean result = new HeatProcessor().resumeStack(paramHandler);
+        boolean result = givenHeatProcessor().resumeStack(paramHandler);
 
         // then
         assertTrue(result);
@@ -270,7 +313,7 @@ public class HeatProcessorTest {
                                 InstanceType.TROVE.getString())));
 
         // when
-        boolean result = new HeatProcessor().resumeStack(paramHandler);
+        boolean result = givenHeatProcessor().resumeStack(paramHandler);
 
         // then
         assertTrue(result);
@@ -295,7 +338,7 @@ public class HeatProcessorTest {
                         "test", "servId")));
 
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
     }
 
     @Test(expected = InstanceNotAliveException.class)
@@ -311,7 +354,7 @@ public class HeatProcessorTest {
                         .respStacksResources(serverNames,
                                 InstanceType.EC2.getString())));
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
     }
 
     @Test(expected = HeatException.class)
@@ -325,7 +368,7 @@ public class HeatProcessorTest {
         streamHandler.put("/stacks/" + instanceName, connection);
 
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
     }
 
     @Test(expected = HeatException.class)
@@ -339,7 +382,7 @@ public class HeatProcessorTest {
         streamHandler.put("/servers/0-Instance-server1", connection);
 
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
 
     }
 
@@ -354,7 +397,7 @@ public class HeatProcessorTest {
         streamHandler.put("/stacks/" + instanceName + "/resources", connection);
 
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
     }
 
     @Test(expected = HeatException.class)
@@ -374,7 +417,7 @@ public class HeatProcessorTest {
                 connection);
 
         // when
-        new HeatProcessor().resumeStack(paramHandler);
+        givenHeatProcessor().resumeStack(paramHandler);
     }
 
     @Test(expected = InstanceNotAliveException.class)
@@ -390,7 +433,7 @@ public class HeatProcessorTest {
                         .respStacksResources(serverNames,
                                 InstanceType.EC2.getString())));
         // when
-        new HeatProcessor().suspendStack(paramHandler);
+        givenHeatProcessor().suspendStack(paramHandler);
     }
 
     @Test
@@ -400,7 +443,7 @@ public class HeatProcessorTest {
         createBasicParameters(instanceName, "fosi_v2.json", "http");
 
         // when
-        boolean result = new HeatProcessor().suspendStack(paramHandler);
+        boolean result = givenHeatProcessor().suspendStack(paramHandler);
 
         // then
         assertTrue(result);
@@ -421,7 +464,7 @@ public class HeatProcessorTest {
                                 false)));
 
         // when
-        boolean result = new HeatProcessor().suspendStack(paramHandler);
+        boolean result = givenHeatProcessor().suspendStack(paramHandler);
 
         // then
         assertFalse(result);
@@ -442,7 +485,7 @@ public class HeatProcessorTest {
                         .respStacksResources(serverNames,
                                 InstanceType.EC2.getString())));
         // when
-        new HeatProcessor().suspendStack(paramHandler);
+        givenHeatProcessor().suspendStack(paramHandler);
     }
 
     @Test(expected = HeatException.class)
@@ -457,7 +500,7 @@ public class HeatProcessorTest {
         streamHandler.put("/stacks/" + instanceName, connection);
 
         // when
-        new HeatProcessor().suspendStack(paramHandler);
+        givenHeatProcessor().suspendStack(paramHandler);
     }
 
     @Test(expected = HeatException.class)
@@ -473,7 +516,7 @@ public class HeatProcessorTest {
                 connection);
 
         // when
-        new HeatProcessor().suspendStack(paramHandler);
+        givenHeatProcessor().suspendStack(paramHandler);
     }
 
     @Test
@@ -488,13 +531,99 @@ public class HeatProcessorTest {
 
         // when
         try {
-            new HeatProcessor().createStack(paramHandler);
+            givenHeatProcessor().createStack(paramHandler);
             assertTrue("Test must fail with HeatException!", false);
         } catch (HeatException ex) {
             // then
             assertEquals(
                     "A JSONObject text must begin with '{' at character 1 of no valid JSON",
                     ex.getMessage());
+        }
+    }
+
+    @Test
+    public void updateStack() throws Exception {
+        // given
+        createBasicParameters("instanceName", "fosi_v2.json", "http");
+
+        // when
+        givenHeatProcessor().updateStack(paramHandler);
+
+        // then
+    }
+
+    @Test
+    public void updateStack_connectionFailed500() throws Exception {
+        // given
+        createBasicParameters("instanceName", "fosi_v2.json", "http");
+        MockHttpURLConnection connection = new MockHttpURLConnection(500,
+                MockURLStreamHandler.respServerActions());
+        connection.setIOException(new IOException());
+        streamHandler.put("/stacks/instanceName", connection);
+
+        // when
+        HeatProcessor hp = givenAnyHeatProcessor_Error();
+
+        try {
+            hp.updateStack(paramHandler);
+
+            fail();
+        } catch (HeatException e) {
+            // then
+            assertEquals(500, e.getResponseCode());
+        }
+    }
+
+    @Test
+    public void updateStack_connectionFailed400() throws Exception {
+        // given
+        createBasicParameters("instanceName", "fosi_v2.json", "http");
+        MockHttpURLConnection connection = new MockHttpURLConnection(400,
+                MockURLStreamHandler.respServerActions());
+        connection.setIOException(new IOException());
+        streamHandler.put("/stacks/instanceName", connection);
+
+        // when
+        HeatProcessor hp = givenAnyHeatProcessor_Error();
+
+        try {
+            hp.updateStack(paramHandler);
+
+            fail();
+        } catch (HeatException e) {
+            // then
+            assertEquals(400, e.getResponseCode());
+        }
+    }
+
+    @Test
+    public void deleteStack() throws Exception {
+        // given
+        createBasicParameters("instanceName", "fosi_v2.json", "http");
+
+        // when
+        givenHeatProcessor().createStack(paramHandler);
+    }
+
+    @Test
+    public void deleteStack_connectionFailed() throws Exception {
+        // given
+        createBasicParameters("instanceName", "fosi_v2.json", "http");
+        MockHttpURLConnection connection = new MockHttpURLConnection(400,
+                MockURLStreamHandler.respServerActions());
+        connection.setIOException(new IOException());
+        streamHandler.put("/stacks/instanceName", connection);
+
+        // when
+        HeatProcessor hp = givenAnyHeatProcessor_Error();
+
+        try {
+            hp.deleteStack(paramHandler);
+
+            fail();
+        } catch (HeatException e) {
+            // then
+            assertEquals(400, e.getResponseCode());
         }
     }
 
@@ -530,63 +659,62 @@ public class HeatProcessorTest {
                 "http://estfarmaki2:8880/templates/"));
     }
 
-    @Test
-    public void updateStack() throws Exception {
-        // given
-        createBasicParameters("instanceName", "fosi_v2.json", "http");
+    private HeatProcessor givenHeatProcessor() throws AuthenticationException,
+            APPlatformException {
+        Template t = new Template();
+        t.setContent(MockURLStreamHandler.respTemplatesFosi_v2().getBytes());
 
-        // when
-        new HeatProcessor().updateStack(paramHandler);
+        final APPTemplateService service = mock(APPTemplateService.class);
+        when(
+                service.getTemplate(anyString(), anyString(),
+                        any(PasswordAuthentication.class))).thenReturn(t);
 
-        // then
+        return new HeatProcessor() {
+            @Override
+            protected APPTemplateService getTemplateService()
+                    throws NamingException {
+                return service;
+            }
+        };
     }
 
-    @Test(expected = HeatException.class)
-    public void updateStack_connectionFailed500() throws Exception {
-        // given
-        createBasicParameters("instanceName", "fosi_v2.json", "http");
-        MockHttpURLConnection connection = new MockHttpURLConnection(500,
-                MockURLStreamHandler.respServerActions());
-        connection.setIOException(new IOException());
-        streamHandler.put("/stacks/instanceName", connection);
+    private HeatProcessor givenAnyHeatProcessor_NoTemplate()
+            throws AuthenticationException, APPlatformException {
+        Template t = new Template();
+        t.setContent(MockURLStreamHandler.respTemplatesFosi_v2().getBytes());
 
-        // when
-        new HeatProcessor().updateStack(paramHandler);
+        final APPTemplateService service = Mockito
+                .mock(APPTemplateService.class);
+        when(
+                service.getTemplate(anyString(), anyString(),
+                        any(PasswordAuthentication.class))).thenReturn(null);
+
+        return new HeatProcessor() {
+            @Override
+            protected APPTemplateService getTemplateService()
+                    throws NamingException {
+                return service;
+            }
+        };
     }
 
-    @Test(expected = HeatException.class)
-    public void updateStack_connectionFailed400() throws Exception {
-        // given
-        createBasicParameters("instanceName", "fosi_v2.json", "http");
-        MockHttpURLConnection connection = new MockHttpURLConnection(400,
-                MockURLStreamHandler.respServerActions());
-        connection.setIOException(new IOException());
-        streamHandler.put("/stacks/instanceName", connection);
+    private HeatProcessor givenAnyHeatProcessor_Error()
+            throws AuthenticationException, APPlatformException {
+        Template t = new Template();
+        t.setContent(MockURLStreamHandler.respTemplatesFosi_v2().getBytes());
 
-        // when
-        new HeatProcessor().updateStack(paramHandler);
+        final APPTemplateService service = Mockito
+                .mock(APPTemplateService.class);
+
+        doThrow(new APPlatformException("")).when(service).getTemplate(
+                anyString(), anyString(), any(PasswordAuthentication.class));
+
+        return new HeatProcessor() {
+            @Override
+            protected APPTemplateService getTemplateService()
+                    throws NamingException {
+                return service;
+            }
+        };
     }
-
-    @Test
-    public void deleteStack() throws Exception {
-        // given
-        createBasicParameters("instanceName", "fosi_v2.json", "http");
-
-        // when
-        new HeatProcessor().deleteStack(paramHandler);
-    }
-
-    @Test(expected = HeatException.class)
-    public void deleteStack_connectionFailed() throws Exception {
-        // given
-        createBasicParameters("instanceName", "fosi_v2.json", "http");
-        MockHttpURLConnection connection = new MockHttpURLConnection(400,
-                MockURLStreamHandler.respServerActions());
-        connection.setIOException(new IOException());
-        streamHandler.put("/stacks/instanceName", connection);
-
-        // when
-        new HeatProcessor().deleteStack(paramHandler);
-    }
-
 }

@@ -51,13 +51,13 @@ public enum ConfigurationKey {
     @Doc({ "URL to specify a Web page that is to be displayed in case the HTTP",
             "protocol is used and a customer tries to access a marketplace",
             "without a valid marketplace ID." })
-    @Example("http://<your server>:<your port>/oscm-portal/marketplace?mid=8f78f156")
+    @Example("http://<your server>:<your port>/oscm-portal/marketplace/index.jsf?mId=8f78f156")
     MP_ERROR_REDIRECT_HTTP(false, null, "url"),
 
     @Doc({ "URL to specify a Web page that is to be displayed in case the HTTPS",
             "protocol is used and a customer tries to access a marketplace",
             "without a valid marketplace ID." })
-    @Example("https://<your server>:<your port>/oscm-portal/marketplace?mid=8f78f156")
+    @Example("https://<your server>:<your port>/oscm-portal/marketplace/index.jsf?mId=8f78f156")
     MP_ERROR_REDIRECT_HTTPS(false, null, "url"),
 
     @Doc({ "The log level valid for the entire application." })
@@ -72,7 +72,7 @@ public enum ConfigurationKey {
 
     @Doc({ "The path to the file containing the key required for encrypting and",
            "decrypting service parameters and custom attributes." })
-    @Example("<path>/key")
+    @Example("./key")
     KEY_FILE_PATH(false, "./key", "string", false),
 
     @Doc({ "The number of decimal places for prices. Values between 2 and 6 are supported." })
@@ -183,6 +183,7 @@ public enum ConfigurationKey {
             HiddenUIConstants.MENU_ITEM_OPERATOR_MANAGE_CURRENCIES,
             HiddenUIConstants.MENU_ITEM_OPERATOR_MANAGE_CONFIGURATION,
             HiddenUIConstants.MENU_ITEM_OPERATOR_MANAGE_INDEXES,
+            HiddenUIConstants.MENU_ITEM_OPERATOR_MANAGE_TENANTS,
             HiddenUIConstants.MENU_GROUP_NAVIGATION_MYACCOUNT,
             HiddenUIConstants.MENU_ITEM_ORGANIZATION_EDIT,
             HiddenUIConstants.MENU_ITEM_USER_PWD,
@@ -361,7 +362,15 @@ public enum ConfigurationKey {
            "The ID is used for verifying that the response to an authentication request ",
            "is returned by the correct IdP." })
     @Example("IDP_ID")
-    SSO_IDP_SAML_ASSERTION_ISSUER_ID(false, "default", "string", false);
+    SSO_IDP_SAML_ASSERTION_ISSUER_ID(false, "default", "string", false),
+
+    @Doc({ "Hashing algorithm used in signing SAML communication" })
+    @Example("SHA1")
+    SSO_SIGNING_ALGORITHM(false, SigningAlgorithmType.SHA1.name(), "string", false),
+
+    @Doc({ "The Kafka configuration property bootstrap.servers." })
+    @Example("localhost:9092")
+    KAFKA_BOOTSTRAP_SERVERS(false, "", "string");
 
     // ///////////////////////////////////////////////////////////////////////////////////
 

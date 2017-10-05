@@ -17,9 +17,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.annotation.security.RolesAllowed;
@@ -132,7 +134,25 @@ import org.oscm.internal.types.exception.SubscriptionStillActiveException;
 import org.oscm.internal.types.exception.TechnicalServiceNotAliveException;
 import org.oscm.internal.types.exception.TechnicalServiceOperationException;
 import org.oscm.internal.types.exception.ValidationException;
-import org.oscm.internal.vo.*;
+import org.oscm.internal.vo.VOBillingContact;
+import org.oscm.internal.vo.VOInstanceInfo;
+import org.oscm.internal.vo.VOLocalizedText;
+import org.oscm.internal.vo.VOOrganization;
+import org.oscm.internal.vo.VOParameter;
+import org.oscm.internal.vo.VOPaymentInfo;
+import org.oscm.internal.vo.VORoleDefinition;
+import org.oscm.internal.vo.VOService;
+import org.oscm.internal.vo.VOServiceOperationParameter;
+import org.oscm.internal.vo.VOServiceOperationParameterValues;
+import org.oscm.internal.vo.VOSubscription;
+import org.oscm.internal.vo.VOSubscriptionDetails;
+import org.oscm.internal.vo.VOSubscriptionIdAndOrganizations;
+import org.oscm.internal.vo.VOTechnicalServiceOperation;
+import org.oscm.internal.vo.VOTriggerProcess;
+import org.oscm.internal.vo.VOUda;
+import org.oscm.internal.vo.VOUsageLicense;
+import org.oscm.internal.vo.VOUser;
+import org.oscm.internal.vo.VOUserSubscription;
 import org.oscm.logging.Log4jLogger;
 import org.oscm.logging.LoggerFactory;
 import org.oscm.notification.vo.VONotification;
@@ -207,6 +227,7 @@ public class SubscriptionServiceBean
     public static final String KEY_PAIR_NAME = "Key pair name";
     public static final String AMAZONAWS_COM = "amazonaws.com";
     private static final int PAYMENTTYPE_INVOICE = 3;
+    private static final String VMS_NUMBER_PARAM = "VMS_NUMBER";
 
     private static final Log4jLogger LOG = LoggerFactory
             .getLogger(SubscriptionServiceBean.class);
@@ -305,8 +326,8 @@ public class SubscriptionServiceBean
         Subscription sub;
         PlatformUser currentUser = dataManager.getCurrentUser();
 
-        Product prod = dataManager
-                .getReference(Product.class, service.getKey());
+        Product prod = dataManager.getReference(Product.class,
+                service.getKey());
         checkIfServiceAvailable(service.getKey(), service.getServiceId(),
                 currentUser);
         checkIfSubscriptionAlreadyExists(prod);
@@ -667,6 +688,8 @@ public class SubscriptionServiceBean
 
         // Create a new subscription object
         Subscription newSub = new Subscription();
+        newSub.setUuid(UUID.randomUUID());
+        newSub.setEventPublished(false);
 
         Long creationTime = Long
                 .valueOf(DateFactory.getInstance().getTransactionTime());
@@ -823,8 +846,8 @@ public class SubscriptionServiceBean
 
         if (ProvisioningType.SYNCHRONOUS.equals(techProd.getProvisioningType())
                 && tp.getTriggerDefinition() != null
-                && (prod.isAutoAssignUserEnabled() != null && prod
-                        .isAutoAssignUserEnabled().booleanValue())
+                && (prod.isAutoAssignUserEnabled() != null
+                        && prod.isAutoAssignUserEnabled().booleanValue())
                 && newSub.getUsageLicenseForUser(owner) == null) {
             // TODO 1. assign users only for SYNCHRONOUS case.
             // 2. extract code to another method (more readability).
@@ -1616,100 +1639,136 @@ public class SubscriptionServiceBean
             SubscriptionStateException, TechnicalServiceNotAliveException,
             TechnicalServiceOperationException, OperationNotPermittedException,
             ConcurrentModificationException, OperationPendingException {
-
+        System.out.println("1");
         ArgumentValidator.notNull("subscriptionId", subscriptionId);
 
         Subscription sub = manageBean.checkSubscriptionOwner(subscriptionId, 0);
+        System.out.println("2");
 
         stateValidator.checkAddRevokeUserAllowed(sub);
-
+        System.out.println("3");
         // validation
         if (usersToBeAdded != null) {
+            System.out.println("4");
             for (VOUsageLicense lic : usersToBeAdded) {
+                System.out.println("5");
                 try {
                     PlatformUser user = dataManager.getReference(
                             PlatformUser.class, lic.getUser().getKey());
+                    System.out.println("6");
                     getAndCheckServiceRole(lic, sub.getProduct());
+                    System.out.println("7");
                     // fill user ID for trigger process
                     lic.getUser().setUserId(user.getUserId());
+                    System.out.println("8");
                 } catch (ObjectNotFoundException e) {
+                    System.out.println("9");
                     throw new ObjectNotFoundException(
                             DomainObjectException.ClassEnum.USER,
                             String.valueOf(lic.getUser().getUserId()));
                 }
             }
         }
+        System.out.println("10");
         if (usersToBeRevoked != null) {
+            System.out.println("11");
             for (VOUser entry : usersToBeRevoked) {
+                System.out.println("12");
                 try {
                     PlatformUser user = dataManager
                             .getReference(PlatformUser.class, entry.getKey());
+                    System.out.println("13");
                     // fill user ID for trigger process
                     entry.setUserId(user.getUserId());
+                    System.out.println("14");
                 } catch (ObjectNotFoundException e) {
+                    System.out.println("15");
                     throw new ObjectNotFoundException(
                             DomainObjectException.ClassEnum.USER,
                             String.valueOf(entry.getUserId()));
                 }
             }
         }
-
+        System.out.println("16");
         TriggerProcessValidator validator = new TriggerProcessValidator(
                 dataManager);
+        System.out.println("17");
         List<TriggerProcessIdentifier> pendingAddRevokeUsers = validator
                 .getPendingAddRevokeUsers(subscriptionId, usersToBeAdded,
                         usersToBeRevoked);
+        System.out.println("18");
         if (!pendingAddRevokeUsers.isEmpty()) {
+            System.out.println("19");
             String userIds = determineUserIds(pendingAddRevokeUsers);
+            System.out.println("20");
+            System.out.println("20");
             OperationPendingException ope = new OperationPendingException(
                     String.format(
                             "Operation cannot be performed. There is already another pending request for subscription '%s' to add or revoke the users: %s",
                             subscriptionId, userIds),
                     ReasonEnum.ADD_REVOKE_USER,
                     new Object[] { subscriptionId, userIds });
+            System.out.println("21");
             LOG.logWarn(Log4jLogger.SYSTEM_LOG, ope,
                     LogMessageIdentifier.WARN_ADD_REVOKE_USER_FAILED_DUE_TO_TRIGGER_CONFLICT,
                     subscriptionId);
+            System.out.println("22");
             throw ope;
         }
-
+        System.out.println("23");
         validateTriggerProcessForSubscription(sub);
+        System.out.println("24");
 
         // now send a suspending message for the processing
         TriggerMessage message = new TriggerMessage(
                 TriggerType.ADD_REVOKE_USER);
+        System.out.println("25");
         List<TriggerProcessMessageData> list = triggerQS
                 .sendSuspendingMessages(Collections.singletonList(message));
+        System.out.println("26");
         TriggerProcess proc = list.get(0).getTrigger();
+        System.out.println("27");
         proc.addTriggerProcessParameter(TriggerProcessParameterName.OBJECT_ID,
                 subscriptionId);
+        System.out.println("28");
         proc.addTriggerProcessParameter(
                 TriggerProcessParameterName.SUBSCRIPTION, subscriptionId);
+        System.out.println("29");
         proc.addTriggerProcessParameter(
                 TriggerProcessParameterName.USERS_TO_ADD, usersToBeAdded);
+        System.out.println("30");
         proc.addTriggerProcessParameter(
                 TriggerProcessParameterName.USERS_TO_REVOKE, usersToBeRevoked);
+        System.out.println("30");
 
         try {
             // if processing is not suspended, call finishing method
             TriggerDefinition triggerDefinition = proc.getTriggerDefinition();
+            System.out.println("31");
             if (triggerDefinition == null) {
+                System.out.println("32");
                 addRevokeUserInt(proc);
+                System.out.println("33");
                 return true;
             } else if (triggerDefinition.isSuspendProcess()) {
+                System.out.println("34");
                 proc.setTriggerProcessIdentifiers(TriggerProcessIdentifiers
                         .createAddRevokeUser(dataManager,
                                 TriggerType.ADD_REVOKE_USER, subscriptionId,
                                 usersToBeAdded, usersToBeRevoked));
+                System.out.println("35");
                 dataManager.merge(proc);
+                System.out.println("36");
             }
         } catch (ObjectNotFoundException | SubscriptionStateException
                 | TechnicalServiceNotAliveException
                 | TechnicalServiceOperationException e) {
+            System.out.println("37");
             sessionCtx.setRollbackOnly();
+            System.out.println("38");
             throw e;
         }
-
+        System.out.println("39");
         return false;
     }
 
@@ -2318,6 +2377,7 @@ public class SubscriptionServiceBean
         final String oldSubscriptionId = subscription.getSubscriptionId();
         subscription
                 .setSubscriptionId(String.valueOf(System.currentTimeMillis()));
+        subscription.setEventPublished(false);
 
         boolean removed = removeOnBehalfActingReference(subscription);
 
@@ -2821,6 +2881,7 @@ public class SubscriptionServiceBean
         PlatformUser currentUser = dataManager.getCurrentUser();
         Subscription subscription = manageBean
                 .loadSubscription(current.getSubscriptionId(), 0);
+        subscription.setEventPublished(false);
         BaseAssembler.verifyVersionAndKey(subscription, current);
         Product initialProduct = subscription.getProduct();
         PaymentInfo initialPaymentInfo = subscription.getPaymentInfo();
@@ -3682,6 +3743,7 @@ public class SubscriptionServiceBean
                 subscription.getPurchaseOrderNumber(), false);
         Subscription subscriptionToModify = dataManager
                 .getReference(Subscription.class, subscription.getKey());
+        subscriptionToModify.setEventPublished(false);
         PermissionCheck.owns(subscriptionToModify,
                 dataManager.getCurrentUser().getOrganization(), LOG);
         BaseAssembler.verifyVersionAndKey(subscriptionToModify, subscription);
@@ -3698,11 +3760,13 @@ public class SubscriptionServiceBean
             dataManager.validateBusinessKeyUniqueness(sub);
 
             List<VOTriggerProcess> triggers = triggerService
-                .getAllActionsForOrganizationRelatedSubscription();
+                    .getAllActionsForOrganizationRelatedSubscription();
             for (VOTriggerProcess voTriggerProcess : triggers) {
-                if (voTriggerProcess.getSubscription().getSubscriptionId().equals(subscriptionId)) {
+                if (voTriggerProcess.getSubscription().getSubscriptionId()
+                        .equals(subscriptionId)) {
                     NonUniqueBusinessKeyException e = new NonUniqueBusinessKeyException(
-                        DomainObjectException.ClassEnum.SUBSCRIPTION, subscriptionId);
+                            DomainObjectException.ClassEnum.SUBSCRIPTION,
+                            subscriptionId);
                     throw e;
                 }
             }
@@ -4232,9 +4296,46 @@ public class SubscriptionServiceBean
         ArgumentValidator.notNull("subscriptionId", subscriptionId);
         ArgumentValidator.notNull("organizationId", organizationId);
 
+        completeAsyncSubscription(subscriptionId, organizationId, reason, true);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void abortAsyncSubscription(UUID subscriptionUUID)
+            throws ObjectNotFoundException, SubscriptionStateException,
+            OrganizationAuthoritiesException, OperationNotPermittedException {
+
+        ArgumentValidator.notNull("subscriptionUUID", subscriptionUUID);
+
+        VOSubscription subscription = getSubscription(subscriptionUUID);
+        if (subscription == null) {
+            throw new ObjectNotFoundException("Subscription with UUID "
+                    + subscriptionUUID + " not found!");
+        }
+
+        completeAsyncSubscription(subscription.getSubscriptionId(),
+                subscription.getOrganizationId(), null,
+                false);
+
+    }
+
+    /**
+     * @param subscriptionId
+     * @param organizationId
+     * @param reason
+     * @throws ObjectNotFoundException
+     * @throws OperationNotPermittedException
+     * @throws SubscriptionStateException
+     */
+    void completeAsyncSubscription(String subscriptionId, String organizationId,
+            List<VOLocalizedText> reason, boolean validateOrganization)
+            throws ObjectNotFoundException, OperationNotPermittedException,
+            SubscriptionStateException {
         Subscription subscription = manageBean.findSubscription(subscriptionId,
                 organizationId);
-        manageBean.validateTechnoloyProvider(subscription);
+        if (validateOrganization) {
+            manageBean.validateTechnoloyProvider(subscription);
+        }
         if (subscription.getStatus() != SubscriptionStatus.PENDING) {
             throw new SubscriptionStateException(
                     "Operation not allowed for subscription "
@@ -4324,6 +4425,56 @@ public class SubscriptionServiceBean
         ArgumentValidator.notNull("organizationId", organizationId);
         ArgumentValidator.notNull("instance", instanceInfo);
 
+        completeAsynProvisioning(instanceInfo, subscriptionId, organizationId,
+                true);
+
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void completeAsyncSubscription(UUID subscriptionUUID,
+            VOInstanceInfo instanceInfo) throws ObjectNotFoundException,
+            SubscriptionStateException, TechnicalServiceNotAliveException,
+            TechnicalServiceOperationException,
+            OrganizationAuthoritiesException, OperationNotPermittedException,
+            ValidationException {
+
+        ArgumentValidator.notNull("subscriptionUUID", subscriptionUUID);
+        ArgumentValidator.notNull("instance", instanceInfo);
+
+        VOSubscription subscription = getSubscription(subscriptionUUID);
+
+        if (subscription == null) {
+            throw new ObjectNotFoundException("Subscription with UUID "
+                    + subscriptionUUID + " not found!");
+        }
+
+        completeAsynProvisioning(instanceInfo, subscription.getSubscriptionId(),
+                subscription.getOrganizationId(), false);
+    }
+
+    public VOSubscription getSubscription(UUID uuid) {
+        Subscription subscription = getSubscriptionDao().getSubscription(uuid);
+        VOSubscription voSubscription = SubscriptionAssembler.toVOSubscription(
+                subscription, null, PerformanceHint.ONLY_FIELDS_FOR_LISTINGS);
+        return voSubscription;
+    }
+
+    /**
+     * @param instanceInfo
+     * @param subscription
+     * @throws ValidationException
+     * @throws TechnicalServiceOperationException
+     * @throws OperationNotPermittedException
+     * @throws SubscriptionStateException
+     * @throws ObjectNotFoundException
+     */
+    void completeAsynProvisioning(VOInstanceInfo instanceInfo,
+            String subscriptionId, String organizationId,
+            boolean validateOrganization) throws ValidationException,
+            TechnicalServiceOperationException, OperationNotPermittedException,
+            SubscriptionStateException, ObjectNotFoundException {
+
         Subscription subscription = manageBean.findSubscription(subscriptionId,
                 organizationId);
 
@@ -4341,7 +4492,9 @@ public class SubscriptionServiceBean
 
         updateInstanceInfoForCompletion(subscription, instanceInfo);
 
-        manageBean.validateTechnoloyProvider(subscription);
+        if (validateOrganization) {
+            manageBean.validateTechnoloyProvider(subscription);
+        }
         if (subscription.getStatus() != SubscriptionStatus.PENDING) {
             throw new SubscriptionStateException(
                     "Operation not allowed for subscription "
@@ -4370,7 +4523,6 @@ public class SubscriptionServiceBean
 
         PriceModel pm = subscription.getProduct().getPriceModel();
         pm.setProvisioningCompleted(true);
-
     }
 
     @Override
@@ -4383,9 +4535,54 @@ public class SubscriptionServiceBean
         ArgumentValidator.notNull("subscriptionId", subscriptionId);
         ArgumentValidator.notNull("organizationId", organizationId);
 
+        updateAsyncProgress(subscriptionId, organizationId, progress, true);
+
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void updateAsyncSubscriptionProgress(UUID subscriptionUUID,
+            String progress)
+            throws ObjectNotFoundException, SubscriptionStateException,
+            OrganizationAuthoritiesException, OperationNotPermittedException {
+
+        ArgumentValidator.notNull("subscriptionUUID", subscriptionUUID);
+
+        VOSubscription subscription = getSubscription(subscriptionUUID);
+        if (subscription == null) {
+            throw new ObjectNotFoundException("Subscription with UUID "
+                    + subscriptionUUID + " not found!");
+        }
+
+        List<VOLocalizedText> progressList = new ArrayList<>();
+        VOLocalizedText text = new VOLocalizedText();
+        text.setLocale(Locale.ENGLISH.toString());
+        text.setText(progress);
+        progressList.add(text);
+
+        updateAsyncProgress(subscription.getSubscriptionId(),
+                subscription.getOrganizationId(),
+                progressList, false);
+
+    }
+
+    /**
+     * @param subscriptionId
+     * @param organizationId
+     * @param progress
+     * @throws ObjectNotFoundException
+     * @throws OperationNotPermittedException
+     * @throws SubscriptionStateException
+     */
+    void updateAsyncProgress(String subscriptionId, String organizationId,
+            List<VOLocalizedText> progress, boolean validateOrganization)
+            throws ObjectNotFoundException, OperationNotPermittedException,
+            SubscriptionStateException {
         Subscription subscription = manageBean.findSubscription(subscriptionId,
                 organizationId);
-        manageBean.validateTechnoloyProvider(subscription);
+        if (validateOrganization) {
+            manageBean.validateTechnoloyProvider(subscription);
+        }
         if (subscription.getStatus() != SubscriptionStatus.PENDING) {
             throw new SubscriptionStateException(
                     "Operation not allowed for subscription "
@@ -4396,7 +4593,6 @@ public class SubscriptionServiceBean
         localizer.storeLocalizedResources(subscription.getKey(),
                 LocalizedObjectTypes.SUBSCRIPTION_PROVISIONING_PROGRESS,
                 progress);
-
     }
 
     @Override
@@ -4764,6 +4960,7 @@ public class SubscriptionServiceBean
 
         ArgumentValidator.notNull("subscription", subscrVO);
         Subscription subscription = loadSubscription(subscrVO.getKey());
+        subscription.setEventPublished(false);
         BaseAssembler.verifyVersionAndKey(subscription, subscrVO);
 
         // Remove corresponding operation record of the subscription
@@ -4954,6 +5151,35 @@ public class SubscriptionServiceBean
         ArgumentValidator.notNull("organizationId", organizationId);
         ArgumentValidator.notNull("instance", instance);
 
+        completeAsyncModification(subscriptionId, organizationId, instance,
+                true);
+    }
+
+    @Override
+    public void completeAsyncModifySubscription(UUID subscriptionUUID,
+            VOInstanceInfo instance) throws ObjectNotFoundException,
+            SubscriptionStateException, TechnicalServiceNotAliveException,
+            TechnicalServiceOperationException,
+            OrganizationAuthoritiesException, OperationNotPermittedException {
+        ArgumentValidator.notNull("subscriptionUUID", subscriptionUUID);
+        ArgumentValidator.notNull("instance", instance);
+
+        VOSubscription subscription = getSubscription(subscriptionUUID);
+
+        if (subscription == null) {
+            throw new ObjectNotFoundException("Subscription with UUID "
+                    + subscriptionUUID + " not found!");
+        }
+
+        completeAsyncModification(subscription.getSubscriptionId(),
+                subscription.getOrganizationId(), instance,
+                false);
+    }
+
+    void completeAsyncModification(String subscriptionId, String organizationId,
+            VOInstanceInfo instance, boolean validateOrganization)
+            throws ObjectNotFoundException, SubscriptionStateException,
+            TechnicalServiceOperationException, OperationNotPermittedException {
         Subscription subscription = modUpgBean.findSubscriptionForAsyncCallBack(
                 subscriptionId, organizationId);
 
@@ -4961,7 +5187,9 @@ public class SubscriptionServiceBean
 
         updateInstanceInfoForCompletion(subscription, instance);
 
-        manageBean.validateTechnoloyProvider(subscription);
+        if (validateOrganization) {
+            manageBean.validateTechnoloyProvider(subscription);
+        }
 
         modUpgBean.setStatusForModifyComplete(subscription);
 
@@ -5024,7 +5252,39 @@ public class SubscriptionServiceBean
         stateValidator.checkAbortAllowedForModifying(subscription);
 
         abortAsyncUpgradeOrModifySubscription(subscription, organizationId,
-                reason);
+                reason, true);
+    }
+
+    @Override
+    public void abortAsyncModifySubscription(UUID subscriptionUUID,
+            String reason)
+            throws ObjectNotFoundException, SubscriptionStateException,
+            OrganizationAuthoritiesException, OperationNotPermittedException {
+        ArgumentValidator.notNull("subscriptionUUID", subscriptionUUID);
+
+        VOSubscription subscription = getSubscription(subscriptionUUID);
+
+        if (subscription == null) {
+            throw new ObjectNotFoundException("Subscription with UUID "
+                    + subscriptionUUID + " not found!");
+        }
+
+        Subscription subscriptionModified = modUpgBean
+                .findSubscriptionForAsyncCallBack(
+                        subscription.getSubscriptionId(),
+                        subscription.getOrganizationId());
+
+        stateValidator.checkAbortAllowedForModifying(subscriptionModified);
+
+        List<VOLocalizedText> localizedText = new ArrayList<>();
+        VOLocalizedText text = new VOLocalizedText();
+        text.setLocale(Locale.ENGLISH.getLanguage());
+        text.setText(reason);
+        localizedText.add(text);
+
+        abortAsyncUpgradeOrModifySubscription(subscriptionModified,
+                subscription.getOrganizationId(),
+                localizedText, false);
     }
 
     @Override
@@ -5087,13 +5347,17 @@ public class SubscriptionServiceBean
         stateValidator.checkAbortAllowedForUpgrading(subscription);
 
         abortAsyncUpgradeOrModifySubscription(subscription, organizationId,
-                reason);
+                reason, true);
     }
 
     void abortAsyncUpgradeOrModifySubscription(Subscription subscription,
-            String organizationId, List<VOLocalizedText> reason)
+            String organizationId, List<VOLocalizedText> reason,
+            boolean validateOrganization)
             throws OperationNotPermittedException {
-        manageBean.validateTechnoloyProvider(subscription);
+
+        if (validateOrganization) {
+            manageBean.validateTechnoloyProvider(subscription);
+        }
 
         final SubscriptionStatus currentState = subscription.getStatus();
 
@@ -5524,8 +5788,47 @@ public class SubscriptionServiceBean
             SubscriptionStateException, TechnicalServiceNotAliveException,
             TechnicalServiceOperationException, OperationPendingException,
             OperationNotPermittedException {
-        Subscription mySubscriptionDetails = getMySubscriptionDetails(key
-                .longValue());
-        return unsubscribeFromService(mySubscriptionDetails.getSubscriptionId());
+        Subscription mySubscriptionDetails = getMySubscriptionDetails(
+                key.longValue());
+        return unsubscribeFromService(
+                mySubscriptionDetails.getSubscriptionId());
+    }
+
+    @Override
+    @RolesAllowed({ "TECHNOLOGY_MANAGER" })
+    public void notifySubscriptionAboutVmsNumber(String subscriptionId,
+            String organizationId, VOInstanceInfo instanceInfo)
+            throws ObjectNotFoundException, OperationNotPermittedException {
+        ArgumentValidator.notNull("subscriptionId", subscriptionId);
+        ArgumentValidator.notNull("organizationId", organizationId);
+        ArgumentValidator.notNull("instance", instanceInfo);
+
+        PlatformUser user = dataManager.getCurrentUser();
+
+        Subscription subscription = manageBean.findSubscription(subscriptionId,
+                organizationId);
+        PermissionCheck.owns(subscription.getProduct().getTechnicalProduct(),
+                user.getOrganization(), LOG, null);
+
+        List<ParameterDefinition> parameterDefinitions = subscription
+                .getProduct().getTechnicalProduct().getParameterDefinitions();
+
+        for (ParameterDefinition parameterDefinition : parameterDefinitions) {
+            if (!parameterDefinition.getParameterId()
+                    .equals(VMS_NUMBER_PARAM)) {
+                continue;
+            }
+            Parameter parameter = getSubscriptionDao()
+                    .getParameterForSubscription(parameterDefinition,
+                            subscription.getParameterSet());
+            if (parameter == null) {
+                parameter = new Parameter();
+                parameter.setParameterDefinition(parameterDefinition);
+                parameter.setParameterSet(subscription.getParameterSet());
+            }
+            parameter.setValue(Integer.toString(instanceInfo.getVmsNumber()));
+            dataManager.merge(parameter);
+            return;
+        }
     }
 }

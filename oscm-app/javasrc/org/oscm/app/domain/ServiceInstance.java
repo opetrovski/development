@@ -22,10 +22,9 @@ import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -33,10 +32,11 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
+import javax.persistence.TableGenerator;
 import javax.persistence.Version;
 
 import org.oscm.app.business.exceptions.BadResultException;
+import org.oscm.app.converters.PSConverter;
 import org.oscm.app.i18n.Messages;
 import org.oscm.app.v2_0.data.InstanceStatus;
 import org.oscm.app.v2_0.data.Setting;
@@ -56,7 +56,9 @@ import org.oscm.string.Strings;
         @NamedQuery(name = "ServiceInstance.getForKey", query = "SELECT si FROM ServiceInstance si WHERE si.instanceId = :key"),
         @NamedQuery(name = "ServiceInstance.getForSubscriptionAndOrg", query = "SELECT si FROM ServiceInstance si WHERE si.subscriptionId = :subscriptionId AND si.organizationId = :organizationId"),
         @NamedQuery(name = "ServiceInstance.getForCtrlKey", query = "SELECT si FROM ServiceInstance si WHERE si.instanceId = :key AND si.controllerId = :cid"),
-        @NamedQuery(name = "ServiceInstance.getAllForCtrl", query = "SELECT si FROM ServiceInstance si WHERE si.controllerId = :cid") })
+        @NamedQuery(name = "ServiceInstance.getAllForCtrl", query = "SELECT si FROM ServiceInstance si WHERE si"
+            + ".controllerId = :cid"),
+        @NamedQuery(name = "ServiceInstance.getAll", query = "SELECT si FROM ServiceInstance si") })
 public class ServiceInstance implements Serializable {
 
     private static final long serialVersionUID = 4298435124486600408L;
@@ -67,7 +69,7 @@ public class ServiceInstance implements Serializable {
     @Column(nullable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "do_seq")
-    @SequenceGenerator(name = "do_seq", allocationSize = 1000)
+    @TableGenerator(table = "hibernate_sequences", name = "do_seq", allocationSize = 1000, valueColumnName = "sequence_next_hi_value")
     private long tkey;
 
     /**
@@ -110,7 +112,7 @@ public class ServiceInstance implements Serializable {
      * instance.
      */
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = PSConverter.class)
     private ProvisioningStatus provisioningStatus;
 
     /**
@@ -193,6 +195,9 @@ public class ServiceInstance implements Serializable {
      * The login path returned by the service.
      */
     private String serviceLoginPath;
+
+    @Column
+    private int vmsNumber;
 
     /**
      * SubscriptionID key for rollbackParameters
@@ -791,4 +796,13 @@ public class ServiceInstance implements Serializable {
     public String getRollbackInstanceAttributes() {
         return rollbackInstanceAttributes;
     }
+
+    public int getVmsNumber() {
+        return vmsNumber;
+    }
+
+    public void setVmsNumber(int vmsNumber) {
+        this.vmsNumber = vmsNumber;
+    }
+
 }
