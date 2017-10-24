@@ -26,6 +26,7 @@ import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient.OSClientV3;
 import org.openstack4j.core.transport.Config;
 import org.openstack4j.core.transport.ProxyHost;
+import org.openstack4j.model.compute.AbsoluteLimit;
 import org.openstack4j.model.compute.QuotaSet;
 import org.openstack4j.model.compute.SimpleTenantUsage;
 import org.openstack4j.model.compute.builder.QuotaSetUpdateBuilder;
@@ -202,6 +203,12 @@ public class OpenstackClient {
 
     public QuotaSet getQuotas(String projectId) {
         return client.compute().quotaSets().get(projectId);
+    }
+
+    public AbsoluteLimit getLimits() throws MalformedURLException {
+        authenticate(ph.getProjectUser(), ph.getProjectUserPwd(),
+                ph.getProjectId());
+        return client.compute().quotaSets().limits().getAbsolute();
     }
 
 }
