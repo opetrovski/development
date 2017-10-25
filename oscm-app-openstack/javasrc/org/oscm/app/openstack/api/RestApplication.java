@@ -24,6 +24,8 @@ public class RestApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(CorsResponseFilter.class);
+
         classes.add(QuotaService.class);
         return classes;
     }
