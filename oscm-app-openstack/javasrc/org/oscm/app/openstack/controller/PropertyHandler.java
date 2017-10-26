@@ -128,8 +128,8 @@ public class PropertyHandler {
     public static final String PROJECT_QUOTA_VOLUMES = "PROJECT_QUOTA_VOLUMES";
 
     /**
-     * The execution interval for the BillingTimerServiceBean that generates
-     * billing events for Openstack Tenant subscriptions. This is a controller
+     * Execution interval in milliseconds for theEventTimer that generates
+     * billing events for Openstack tenant subscriptions. This is a controller
      * setting (not a service instance parameter).
      */
     public static final String TIMER_INTERVAL = "TIMER_INTERVAL";
@@ -207,7 +207,7 @@ public class PropertyHandler {
      * @return the name of the stack
      */
     public String getStackName() {
-        return getValidatedProperty(settings.getParameters(), STACK_NAME);
+        return getValidatedValue(settings.getParameters(), STACK_NAME);
     }
 
     public void setStackName(String stackName) {
@@ -243,8 +243,7 @@ public class PropertyHandler {
      * @return the access information pattern
      */
     public String getAccessInfoPattern() {
-        return getValidatedProperty(settings.getParameters(),
-                ACCESS_INFO_PATTERN);
+        return getValidatedValue(settings.getParameters(), ACCESS_INFO_PATTERN);
     }
 
     /**
@@ -253,7 +252,7 @@ public class PropertyHandler {
      * @return the template name
      */
     public String getTemplateName() {
-        return getValidatedProperty(settings.getParameters(), TEMPLATE_NAME);
+        return getValidatedValue(settings.getParameters(), TEMPLATE_NAME);
     }
 
     /**
@@ -264,13 +263,13 @@ public class PropertyHandler {
     public String getTemplateUrl() throws HeatException {
 
         try {
-            String url = getValidatedProperty(settings.getParameters(),
+            String url = getValidatedValue(settings.getParameters(),
                     TEMPLATE_NAME);
 
             String baseUrl = getValue(TEMPLATE_BASE_URL,
                     settings.getParameters());
             if (baseUrl == null || baseUrl.trim().length() == 0) {
-                baseUrl = getValidatedProperty(settings.getConfigSettings(),
+                baseUrl = getValidatedValue(settings.getConfigSettings(),
                         TEMPLATE_BASE_URL);
             }
             return new URL(new URL(baseUrl), url).toExternalForm();
@@ -346,22 +345,28 @@ public class PropertyHandler {
      * Reads the requested property from the available parameters. If no value
      * can be found, a RuntimeException will be thrown.
      * 
-     * @param sourceProps
+     * @param source
      *            The property object to take the settings from
      * @param key
      *            The key to retrieve the setting for
      * @return the parameter value corresponding to the provided key
      */
-    private String getValidatedProperty(Map<String, Setting> sourceProps,
+    private String getValidatedValue(Map<String, Setting> source,
             String key) {
-        String value = getValue(key, sourceProps);
-        if (value == null) {
-            String message = String.format("No value set for property '%s'",
-                    key);
-            LOGGER.error(message);
-            throw new RuntimeException(message);
+
+        String value = getValue(key, source);
+        if (value != null) {
+            return value;
         }
-        return value;
+
+        String message = String.format("No value set for property '%s'", key);
+        LOGGER.error(message);
+        throw new RuntimeException(message);
+    }
+
+    private String getValue(String key, Map<String, Setting> source) {
+        Setting setting = source.get(key);
+        return setting != null ? setting.getValue() : null;
     }
 
     /**
@@ -375,7 +380,7 @@ public class PropertyHandler {
         String keystoneURL = getValue(KEYSTONE_API_URL,
                 settings.getParameters());
         if (keystoneURL == null || keystoneURL.trim().length() == 0) {
-            keystoneURL = getValidatedProperty(settings.getConfigSettings(),
+            keystoneURL = getValidatedValue(settings.getConfigSettings(),
                     KEYSTONE_API_URL);
         }
         return keystoneURL;
@@ -387,7 +392,7 @@ public class PropertyHandler {
      * @return the password
      */
     public String getPassword() {
-        return getValidatedProperty(settings.getConfigSettings(), API_USER_PWD);
+        return getValidatedValue(settings.getConfigSettings(), API_USER_PWD);
     }
 
     /**
@@ -396,8 +401,7 @@ public class PropertyHandler {
      * @return the user name
      */
     public String getUserName() {
-        return getValidatedProperty(settings.getConfigSettings(),
-                API_USER_NAME);
+        return getValidatedValue(settings.getConfigSettings(), API_USER_NAME);
     }
 
     /**
@@ -474,8 +478,7 @@ public class PropertyHandler {
     public String getTenantId() {
         String tenant = getValue(TENANT_ID, settings.getParameters());
         if (tenant == null || tenant.trim().length() == 0) {
-            tenant = getValidatedProperty(settings.getConfigSettings(),
-                    TENANT_ID);
+            tenant = getValidatedValue(settings.getConfigSettings(), TENANT_ID);
         }
         return tenant;
     }
@@ -523,12 +526,7 @@ public class PropertyHandler {
     }
 
     public String getResourceType() {
-        return getValidatedProperty(settings.getParameters(), RESOURCE_TYPE);
-    }
-
-    private String getValue(String key, Map<String, Setting> source) {
-        Setting setting = source.get(key);
-        return setting != null ? setting.getValue() : null;
+        return getValue(RESOURCE_TYPE, settings.getParameters());
     }
 
     private void setValue(String key, String value,

@@ -77,7 +77,7 @@ public class OpenStackController extends ProvisioningValidator
             .getLogger(OpenStackController.class);
 
     private static final int SERVERS_NUMBER_CANNOT_BE_CHECKED = 0;
-    private static final String RESOURCETYPE_VM = "OS::Nova::Server";
+    private static final String RESOURCETYPE_PROJ = "OS::Keystone::Project";
 
     private APPlatformService platformService;
 
@@ -118,12 +118,12 @@ public class OpenStackController extends ProvisioningValidator
         try {
             PropertyHandler ph = new PropertyHandler(settings);
 
-            if (RESOURCETYPE_VM.equals(ph.getResourceType())) {
-                validateStackName(ph);
-                ph.setState(CREATION_REQUESTED);
-            } else {
+            if (RESOURCETYPE_PROJ.equals(ph.getResourceType())) {
                 ph.setLastUsageFetch("");
                 ph.setState(CREATE_PROJECT);
+            } else {
+                validateStackName(ph);
+                ph.setState(CREATION_REQUESTED);
             }
 
             InstanceDescription id = new InstanceDescription();
@@ -168,10 +168,10 @@ public class OpenStackController extends ProvisioningValidator
         try {
             PropertyHandler ph = new PropertyHandler(settings);
 
-            if (RESOURCETYPE_VM.equals(ph.getResourceType())) {
-                ph.setState(DELETION_REQUESTED);
-            } else {
+            if (RESOURCETYPE_PROJ.equals(ph.getResourceType())) {
                 ph.setState(DELETE_PROJECT);
+            } else {
+                ph.setState(DELETION_REQUESTED);
             }
 
             InstanceStatus result = new InstanceStatus();
@@ -214,12 +214,12 @@ public class OpenStackController extends ProvisioningValidator
                 .getLogText(instanceId, currentSettings));
         try {
             PropertyHandler ph = new PropertyHandler(newSettings);
-            if (RESOURCETYPE_VM.equals(ph.getResourceType())) {
+            if (RESOURCETYPE_PROJ.equals(ph.getResourceType())) {
+                ph.setState(UPDATE_PROJECT);
+            } else {
                 newSettings.getParameters().put(STACK_NAME,
                         currentSettings.getParameters().get(STACK_NAME));
                 ph.setState(MODIFICATION_REQUESTED);
-            } else {
-                ph.setState(UPDATE_PROJECT);
             }
 
             InstanceStatus result = new InstanceStatus();
