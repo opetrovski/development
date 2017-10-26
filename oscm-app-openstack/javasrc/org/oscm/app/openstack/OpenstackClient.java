@@ -114,9 +114,12 @@ public class OpenstackClient {
     }
 
     public Project createProject() {
+        String description = String.format("Managed by OSCM, %s(%s)",
+                ph.getSettings().getOrganizationName(),
+                ph.getSettings().getOrganizationId());
         Project project = client.identity().projects()
                 .create(Builders.project().name(ph.getProjectName())
-                        .description("Managed by OSCM").enabled(true).build());
+                        .description(description).enabled(true).build());
         ph.setProjectId(project.getId());
         return project;
     }
@@ -124,6 +127,8 @@ public class OpenstackClient {
     public User createUser() {
         User user = client.identity().users()
                 .create(Builders.user().name(ph.getProjectUser())
+                        .email(ph.getSettings().getParameters()
+                                .get("REQUESTING_USER_EMAIL").getValue())
                         .description("Managed by OSCM")
                         .password(ph.getProjectUserPwd()).build());
         ph.setProjectUserId(user.getId());

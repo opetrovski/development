@@ -43,6 +43,7 @@ import org.oscm.app.v2_0.data.LocalizedText;
 import org.oscm.app.v2_0.data.OperationParameter;
 import org.oscm.app.v2_0.data.ProvisioningSettings;
 import org.oscm.app.v2_0.data.ServiceUser;
+import org.oscm.app.v2_0.data.Setting;
 import org.oscm.app.v2_0.exceptions.APPlatformException;
 import org.oscm.app.v2_0.exceptions.LogAndExceptionConverter;
 import org.oscm.app.v2_0.intf.APPlatformController;
@@ -119,6 +120,11 @@ public class OpenStackController extends ProvisioningValidator
             PropertyHandler ph = new PropertyHandler(settings);
 
             if (RESOURCETYPE_PROJ.equals(ph.getResourceType())) {
+                // set requesting user because APP does not do it
+                settings.getParameters().put("REQUESTING_USER_EMAIL",
+                        new Setting("REQUESTING_USER_EMAIL",
+                                settings.getRequestingUser().getEmail()));
+
                 ph.setLastUsageFetch("");
                 ph.setState(CREATE_PROJECT);
             } else {
