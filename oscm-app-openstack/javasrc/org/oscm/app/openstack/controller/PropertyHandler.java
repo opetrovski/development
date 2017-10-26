@@ -42,6 +42,8 @@ public class PropertyHandler {
     private static final Logger LOGGER = LoggerFactory
             .getLogger(PropertyHandler.class);
 
+    public static final String RESOURCETYPE_PROJ = "OS::Keystone::Project";
+
     private final ProvisioningSettings settings;
 
     public static final String INSTANCE_ID = "INSTANCE_ID";
@@ -351,8 +353,7 @@ public class PropertyHandler {
      *            The key to retrieve the setting for
      * @return the parameter value corresponding to the provided key
      */
-    private String getValidatedValue(Map<String, Setting> source,
-            String key) {
+    private String getValidatedValue(Map<String, Setting> source, String key) {
 
         String value = getValue(key, source);
         if (value != null) {

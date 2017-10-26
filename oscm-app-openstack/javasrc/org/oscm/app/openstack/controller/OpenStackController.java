@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.oscm.app.openstack.controller;
 
+import static org.oscm.app.openstack.controller.PropertyHandler.RESOURCETYPE_PROJ;
 import static org.oscm.app.openstack.controller.PropertyHandler.STACK_NAME;
 import static org.oscm.app.openstack.data.FlowState.CREATE_PROJECT;
 import static org.oscm.app.openstack.data.FlowState.CREATION_REQUESTED;
@@ -77,7 +78,6 @@ public class OpenStackController extends ProvisioningValidator
             .getLogger(OpenStackController.class);
 
     private static final int SERVERS_NUMBER_CANNOT_BE_CHECKED = 0;
-    private static final String RESOURCETYPE_PROJ = "OS::Keystone::Project";
 
     private APPlatformService platformService;
 

@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.oscm.app.openstack.controller;
 
-import static org.oscm.app.openstack.data.FlowState.FINISHED;
+import static org.oscm.app.openstack.controller.PropertyHandler.RESOURCETYPE_PROJ;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -134,20 +134,20 @@ public class Dispatcher {
                 }
                 client.addUserToProject();
                 client.updateQuota();
-                properties.setState(FINISHED);
+                newState = FlowState.FINISHED;
                 break;
 
             case DELETE_PROJECT:
                 OpenstackClient client2 = new OpenstackClient(properties);
                 client2.deleteUser();
                 client2.deleteProject();
-                properties.setState(FINISHED);
+                newState = FlowState.FINISHED;
                 break;
 
             case UPDATE_PROJECT:
                 OpenstackClient client3 = new OpenstackClient(properties);
                 client3.updateQuota();
-                properties.setState(FINISHED);
+                newState = FlowState.FINISHED;
                 break;
 
             case CREATION_REQUESTED:
@@ -437,10 +437,12 @@ public class Dispatcher {
 
                 break;
             case FINISHED:
-                stack = getHeatProcessor().getStackDetails(properties);
-                status = stack.getStatus();
-                if (StackStatus.CREATE_COMPLETE.name().equals(status)) {
-                    result.setAccessInfo(getAccessInfo(stack));
+                if (!RESOURCETYPE_PROJ.equals(properties.getResourceType())) {
+                    stack = getHeatProcessor().getStackDetails(properties);
+                    status = stack.getStatus();
+                    if (StackStatus.CREATE_COMPLETE.name().equals(status)) {
+                        result.setAccessInfo(getAccessInfo(stack));
+                    }
                 }
                 break;
 
