@@ -26,7 +26,6 @@ import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient.OSClientV3;
 import org.openstack4j.core.transport.Config;
 import org.openstack4j.core.transport.ProxyHost;
-import org.openstack4j.model.compute.AbsoluteLimit;
 import org.openstack4j.model.compute.QuotaSet;
 import org.openstack4j.model.compute.SimpleTenantUsage;
 import org.openstack4j.model.compute.builder.QuotaSetUpdateBuilder;
@@ -35,6 +34,7 @@ import org.openstack4j.model.identity.v3.Role;
 import org.openstack4j.model.identity.v3.User;
 import org.openstack4j.model.storage.block.builder.BlockQuotaSetBuilder;
 import org.openstack4j.openstack.OSFactory;
+import org.openstack4j.openstack.compute.domain.NovaAbsoluteLimit;
 import org.oscm.app.openstack.controller.PropertyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,10 +205,11 @@ public class OpenstackClient {
         return client.compute().quotaSets().get(projectId);
     }
 
-    public AbsoluteLimit getLimits() throws MalformedURLException {
+    public NovaAbsoluteLimit getLimits() throws MalformedURLException {
         authenticate(ph.getProjectUser(), ph.getProjectUserPwd(),
                 ph.getProjectId());
-        return client.compute().quotaSets().limits().getAbsolute();
+        return (NovaAbsoluteLimit) client.compute().quotaSets().limits()
+                .getAbsolute();
     }
 
 }
