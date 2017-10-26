@@ -1,0 +1,94 @@
+<!-- Copyright FUJITSU LIMITED 2017-->
+<tns:TechnicalServices xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="oscm.serviceprovisioning/1.9/TechnicalService.xsd" xsi:schemaLocation="oscm.serviceprovisioning/1.9/TechnicalService.xsd ../../oscm-serviceprovisioning/javares/TechnicalServices.xsd">
+   
+   <tns:TechnicalService 
+   		id="OPENSTACK_PROJ" 
+   		build="V5" 
+   		accessType="DIRECT" 
+   		allowingOnBehalfActing="false" 
+   		baseUrl="" 
+   		loginPath="" 
+   		onlyOneSubscriptionPerUser="false" 
+   		provisioningType="ASYNCHRONOUS" 
+   		provisioningUrl="https://HOST:PORT/ProvisioningService/AsynchronousProvisioningProxy?wsdl" 
+   		provisioningVersion="1.0">
+      
+      <AccessInfo locale="en">http://192.168.126.2/auth/login/</AccessInfo>
+      <LocalizedDescription locale="en">OpenStack IaaS implementation</LocalizedDescription>
+      <LocalizedLicense locale="en"></LocalizedLicense>
+      <LocalizedTag locale="en">OpenStack</LocalizedTag>
+      
+      <ParameterDefinition id="APP_CONTROLLER_ID" valueType="STRING" mandatory="true" configurable="false" default="ess.openstack">
+         <LocalizedDescription locale="en">ID of the controller implementation</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="RESOURCE_TYPE" valueType="STRING" mandatory="true" configurable="false" default="OS::Keystone::Project">
+         <LocalizedDescription locale="en">OS::Nova::Server, OS::Keystone::Project</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="TECHNICAL_SERVICE_ID" valueType="STRING" mandatory="true" configurable="true" default="OPENSTACK_PROJ">
+         <LocalizedDescription locale="en">Technical Service Identifier, used to generate events</LocalizedDescription>
+      </ParameterDefinition>
+
+      <ParameterDefinition id="IS_CHARGING" valueType="BOOLEAN" mandatory="true" configurable="true" default="true">
+         <LocalizedDescription locale="en">True if service generates events</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_NAME" valueType="STRING" mandatory="true" configurable="true" modificationType="ONE_TIME">
+         <LocalizedDescription locale="en">Openstack project name</LocalizedDescription>
+      </ParameterDefinition>
+
+      <ParameterDefinition id="PROJECT_USER" valueType="STRING" mandatory="true" configurable="true" modificationType="ONE_TIME">
+         <LocalizedDescription locale="en">The projects' admin user</LocalizedDescription>
+      </ParameterDefinition>
+
+      <ParameterDefinition id="PROJECT_USER_PWD" valueType="STRING" mandatory="true" configurable="true" modificationType="ONE_TIME">
+         <LocalizedDescription locale="en">Password of the projects' admin user</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_CORES" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Number of cores</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_IP" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Number of floating IPs</LocalizedDescription>
+      </ParameterDefinition>
+            
+      <ParameterDefinition id="PROJECT_QUOTA_GB" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Available disk space (GB)</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_INSTANCES" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Number of instances</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_KEYS" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Number of key pairs</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_RAM" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Available RAM (GB)</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <ParameterDefinition id="PROJECT_QUOTA_VOLUMES" valueType="STRING" mandatory="false" configurable="true">
+         <LocalizedDescription locale="en">Number of volumes</LocalizedDescription>
+      </ParameterDefinition>
+      
+      <Event id="EVENT_DISK_GIGABYTE_HOURS">
+	     <LocalizedDescription locale="en">EVENT_DISK_GIGABYTE_HOURS</LocalizedDescription>
+	  </Event>
+
+      <Event id="EVENT_CPU_HOURS">
+	     <LocalizedDescription locale="en">EVENT_CPU_HOURS</LocalizedDescription>
+	  </Event>
+	  
+      <Event id="EVENT_RAM_MEGABYTE_HOURS">
+	     <LocalizedDescription locale="en">EVENT_RAM_MEGABYTE_HOURS</LocalizedDescription>
+	  </Event>
+	  
+      <Event id="EVENT_TOTAL_HOURS">
+	     <LocalizedDescription locale="en">EVENT_TOTAL_HOURS</LocalizedDescription>
+	  </Event>
+   </tns:TechnicalService>
+   
+</tns:TechnicalServices>
