@@ -42,12 +42,14 @@ import com.vmware.vim25.TaskInfoState;
  */
 public class VMPropertyHandler {
 
-    private static final Logger logger = LoggerFactory
+    private static final Logger LOG = LoggerFactory
             .getLogger(VMPropertyHandler.class);
 
     private double templateDiskSpace;
     private final ProvisioningSettings settings;
     DataAccessService das_stub = null;
+
+    public static final String HAUPTFUNKTION = "HAUPTFUNKTION";
 
     public static final String TS_GUEST_READY_TIMEOUT = "READY_TIMEOUT";
 
@@ -151,10 +153,7 @@ public class VMPropertyHandler {
      * several stages until it is automatically deleted
      */
     public enum SubscriptionEndStatus {
-        UNDEFINED,
-        SCHEDULED_FOR_NOTIFICATION,
-        SCHEDULED_FOR_DEACTIVATION,
-        SCHEDULED_FOR_DELETION
+        UNDEFINED, SCHEDULED_FOR_NOTIFICATION, SCHEDULED_FOR_DEACTIVATION, SCHEDULED_FOR_DELETION
     };
 
     public static final String SUBSCRIPTION_END_STATUS = "SUBSCRIPTION_END_STATUS";
@@ -413,7 +412,7 @@ public class VMPropertyHandler {
         if (value != null) {
             settings.getParameters().put(key, value);
         } else {
-            logger.warn("Setting not set because null value. key:" + key);
+            LOG.warn("Setting not set because null value. key:" + key);
         }
     }
 
@@ -472,7 +471,7 @@ public class VMPropertyHandler {
      * manually assigned IP addresses. Does not make sense for DHCP.
      */
     public void releaseManuallyDefinedIPAddresses() throws Exception {
-        logger.debug("");
+        LOG.debug("");
         int numNIC = Integer.parseInt(
                 getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS));
         for (int i = 1; i <= numNIC; i++) {
@@ -489,8 +488,8 @@ public class VMPropertyHandler {
                         das.releaseIPAddress(vcenter, datacenter, cluster, vlan,
                                 ipAddress);
                     } catch (Exception e) {
-                        logger.error(
-                                "Failed to release IP address " + ipAddress, e);
+                        LOG.error("Failed to release IP address " + ipAddress,
+                                e);
                     }
                 }
             }
@@ -510,7 +509,7 @@ public class VMPropertyHandler {
         String vcenter = getTargetVCenterServer();
         String datacenter = getTargetDatacenter();
         String cluster = getTargetCluster();
-        logger.debug("vcenter: " + vcenter + " datacenter: " + datacenter
+        LOG.debug("vcenter: " + vcenter + " datacenter: " + datacenter
                 + " cluster: " + cluster);
 
         int numberOfNICs = Integer.parseInt(
@@ -544,7 +543,7 @@ public class VMPropertyHandler {
                             .get(0).getText());
                 }
 
-                logger.debug("NIC" + i + " VLAN: " + vlan + " IP address: "
+                LOG.debug("NIC" + i + " VLAN: " + vlan + " IP address: "
                         + ipAddress + " SubnetMask: " + nw.getSubnetMask()
                         + " Gateway: " + nw.getGateway() + " DNS Server: "
                         + nw.getDnsServer() + " DNS Suffix: "
@@ -660,7 +659,7 @@ public class VMPropertyHandler {
         String diskPrefix = TS_DATA_DISK_STORAGE.replace("#",
                 Integer.toString(index));
         String result = getServiceSetting(diskPrefix);
-        logger.debug("retrieve name for disk " + index + " value: " + result);
+        LOG.debug("retrieve name for disk " + index + " value: " + result);
         return result;
     }
 
@@ -702,7 +701,7 @@ public class VMPropertyHandler {
             DataAccessService das = getDataAccessService();
             return das.getVLANs(cluster);
         } catch (Exception e) {
-            logger.error("Failed to retrieve VLAN list.", e);
+            LOG.error("Failed to retrieve VLAN list.", e);
             return new ArrayList<>();
         }
     }
@@ -713,7 +712,7 @@ public class VMPropertyHandler {
         try {
             newTKey = das.addVLAN(vlan);
         } catch (Exception e) {
-            logger.error("Failed to add VLAN " + vlan.getName(), e);
+            LOG.error("Failed to add VLAN " + vlan.getName(), e);
         }
         return newTKey;
     }
@@ -723,7 +722,7 @@ public class VMPropertyHandler {
         try {
             das.deleteVLAN(vlan);
         } catch (Exception e) {
-            logger.error("Failed to delete VLAN " + vlan.getName(), e);
+            LOG.error("Failed to delete VLAN " + vlan.getName(), e);
         }
     }
 
@@ -732,7 +731,7 @@ public class VMPropertyHandler {
         try {
             das.updateVLANs(vlans);
         } catch (Exception e) {
-            logger.error("Failed to update VLANs.", e);
+            LOG.error("Failed to update VLANs.", e);
         }
     }
 
@@ -764,7 +763,7 @@ public class VMPropertyHandler {
         try {
             vcenter = das.getVCenter();
         } catch (Exception e) {
-            logger.error("Failed to retrieve vCenter server list.", e);
+            LOG.error("Failed to retrieve vCenter server list.", e);
             vcenter = new ArrayList<>();
         }
 
@@ -776,7 +775,7 @@ public class VMPropertyHandler {
         try {
             das.setVCenter(vcenter);
         } catch (Exception e) {
-            logger.error("Failed to save vCenter server configuration.", e);
+            LOG.error("Failed to save vCenter server configuration.", e);
         }
     }
 
@@ -886,7 +885,7 @@ public class VMPropertyHandler {
             settings.getParameters().put(TS_INSTANCENAME, name);
 
         } catch (Exception e) {
-            logger.error("Failed to generate instance name", e);
+            LOG.error("Failed to generate instance name", e);
             String message = Messages.get(getLocale(),
                     "error_generate_instancename");
             throw new APPlatformException(message, e);
@@ -938,7 +937,7 @@ public class VMPropertyHandler {
         String value = getServiceSetting(serviceparameter);
         boolean isTrue = (value != null ? value.equalsIgnoreCase("true")
                 : false);
-        logger.debug(serviceparameter + ": " + isTrue);
+        LOG.debug(serviceparameter + ": " + isTrue);
         return isTrue;
     }
 
@@ -946,7 +945,7 @@ public class VMPropertyHandler {
         String value = getControllerSetting(serviceparameter);
         boolean isTrue = (value != null ? value.equalsIgnoreCase("true")
                 : false);
-        logger.debug(serviceparameter + ": " + isTrue);
+        LOG.debug(serviceparameter + ": " + isTrue);
         return isTrue;
     }
 
@@ -966,7 +965,7 @@ public class VMPropertyHandler {
 
     private void logTaskInfo(TaskInfo info) {
         if (info == null) {
-            logger.debug("Deleted task info key");
+            LOG.debug("Deleted task info key");
             return;
         }
 
@@ -984,17 +983,20 @@ public class VMPropertyHandler {
 
         XMLGregorianCalendar queueT = info.getQueueTime();
         String queueTime = queueT != null
-                ? queueT.toGregorianCalendar().getTime().toString() : "";
+                ? queueT.toGregorianCalendar().getTime().toString()
+                : "";
 
         XMLGregorianCalendar startT = info.getStartTime();
         String startTime = startT != null
-                ? startT.toGregorianCalendar().getTime().toString() : "";
+                ? startT.toGregorianCalendar().getTime().toString()
+                : "";
 
         XMLGregorianCalendar completeT = info.getCompleteTime();
         String completeTime = completeT != null
-                ? completeT.toGregorianCalendar().getTime().toString() : "";
+                ? completeT.toGregorianCalendar().getTime().toString()
+                : "";
 
-        logger.debug("Save task info key: " + info.getKey() + " name: "
+        LOG.debug("Save task info key: " + info.getKey() + " name: "
                 + info.getName() + " target: " + info.getEntityName()
                 + " state: " + state.name() + " progress: " + progress
                 + "% description: " + description + " queue-time: " + queueTime
@@ -1010,37 +1012,21 @@ public class VMPropertyHandler {
         return (dateVal != null) ? new Date(Long.parseLong(dateVal)) : null;
     }
 
-    /**
-     * Returns the host configuration
-     */
     public String getHostLoadBalancerConfig() {
-        String xml = "";
         String vcenter = getTargetVCenterServer();
         String datacenter = getTargetDatacenter();
         String cluster = getTargetCluster();
-
-        try {
-
-            DataAccessService das = getDataAccessService();
-            xml = das.getHostLoadBalancerConfig(vcenter, datacenter, cluster);
-        } catch (Exception e) {
-            logger.error("VMwarePropertyHandler.getHostLoadBalancerConfig() "
-                    + e.getMessage(), e);
-            throw new RuntimeException(
-                    "Failed to retrieve host load balancing configuration for cluster "
-                            + cluster);
+        String xml = getDataAccessService().getHostLoadBalancerConfig(vcenter,
+                datacenter, cluster);
+        if (xml != null && xml.trim().length() > 0) {
+            return xml;
         }
 
-        if ("".equals(xml)) {
-            logger.error(
-                    "VMwarePropertyHandler.getHostLoadBalancerConfig() The retrieved host load balancing configuration for cluster "
-                            + cluster + " is empty");
-            throw new RuntimeException(
-                    "The retrieved host load balancing configuration for cluster "
-                            + cluster + " is empty");
-        }
-
-        return xml;
+        String msg = String.format(
+                "Retrieved empty load-balancer configuration for %s, %s, %s",
+                vcenter, datacenter, cluster);
+        LOG.error(msg);
+        throw new RuntimeException(msg);
     }
 
     /**
@@ -1101,7 +1087,7 @@ public class VMPropertyHandler {
      * Returns printable responsible user
      */
     public String getResponsibleUserAsString(String locale) {
-        logger.debug("locale: " + locale);
+        LOG.debug("locale: " + locale);
         String respUser = getServiceSetting(TS_RESPONSIBLE_PERSON);
         if (respUser == null) {
             return null;
@@ -1468,7 +1454,7 @@ public class VMPropertyHandler {
         SubscriptionEndStatus state = SubscriptionEndStatus.UNDEFINED;
         String status = getServiceSetting(
                 VMPropertyHandler.SUBSCRIPTION_END_STATUS);
-        logger.debug("status: " + status);
+        LOG.debug("status: " + status);
         if (status != null && status.equals(
                 SubscriptionEndStatus.SCHEDULED_FOR_DEACTIVATION.name())) {
             state = SubscriptionEndStatus.SCHEDULED_FOR_DEACTIVATION;
@@ -1509,7 +1495,7 @@ public class VMPropertyHandler {
      */
     public String getPreviousStateFromHistory(VMPropertyHandler ph,
             String state) throws APPlatformException {
-        logger.debug("state: " + state);
+        LOG.debug("state: " + state);
         String previousState = null;
         String stateHistory = getServiceSetting(SM_STATE_HISTORY);
         String[] states = stateHistory.split(",");
@@ -1526,7 +1512,7 @@ public class VMPropertyHandler {
             throw new APPlatformException(message);
         }
 
-        logger.debug("previousState: " + previousState);
+        LOG.debug("previousState: " + previousState);
         return previousState;
     }
 
@@ -1559,6 +1545,11 @@ public class VMPropertyHandler {
      */
     public String getServiceSetting(String key) {
         return settings.getParameters().get(key);
+    }
+
+    public String getSetting(String key) {
+        String string = settings.getParameters().get(key);
+        return string == null ? "" : string;
     }
 
     public void useMock(DataAccessService das) {
