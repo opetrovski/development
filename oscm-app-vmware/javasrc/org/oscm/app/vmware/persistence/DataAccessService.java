@@ -153,7 +153,7 @@ public class DataAccessService {
     public List<VCenter> getVCenter() throws Exception {
         logger.debug("");
         List<VCenter> vcenter = new ArrayList<VCenter>();
-        String query = "SELECT tkey,name,identifier,url,userid,password FROM vcenter";
+        String query = "SELECT tkey,name,identifier,url,userid,password,manager_host FROM vcenter";
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
 
@@ -168,6 +168,7 @@ public class DataAccessService {
                 vc.setUserid(rs.getString("userid"));
                 vc.setPassword(rs.getString("password"));
                 vc.setTkey(rs.getInt("tkey"));
+                vc.setManagerHost(rs.getString("manager_host"));
                 vcenter.add(vc);
             }
         } catch (SQLException e) {
@@ -179,6 +180,29 @@ public class DataAccessService {
         }
 
         return vcenter;
+    }
+
+    public VCenter getVCenterByName(String name) throws Exception {
+        String query = "SELECT tkey,name,identifier,url,userid,password,manager_host FROM vcenter WHERE name = ?";
+        try (Connection con = getDatasource().getConnection();
+                PreparedStatement stmt = con.prepareStatement(query);) {
+
+            @SuppressWarnings("resource")
+            ResultSet rs = stmt.executeQuery();
+
+            rs.next();
+
+            VCenter vc = new VCenter();
+            vc.setName(rs.getString("name"));
+            vc.setIdentifier(rs.getString("identifier"));
+            vc.setUrl(rs.getString("url"));
+            vc.setUserid(rs.getString("userid"));
+            vc.setPassword(rs.getString("password"));
+            vc.setTkey(rs.getInt("tkey"));
+            vc.setManagerHost(rs.getString("manager_host"));
+            return vc;
+        }
+
     }
 
     private void retrieveDatacenter(VCenter vcenter) throws Exception {

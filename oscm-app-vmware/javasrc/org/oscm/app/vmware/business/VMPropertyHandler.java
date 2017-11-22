@@ -49,6 +49,8 @@ public class VMPropertyHandler {
     private final ProvisioningSettings settings;
     DataAccessService das_stub = null;
 
+    public static final String MANAGER_HOST = "MANAGER_HOST";
+
     public static final String HAUPTFUNKTION = "HAUPTFUNKTION";
 
     public static final String TS_GUEST_READY_TIMEOUT = "READY_TIMEOUT";

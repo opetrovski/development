@@ -22,6 +22,7 @@ public class VCenter implements Serializable {
     private String url;
     private String userid;
     private String password;
+    private String managerHost;
 
     public String getUrl() {
         return url;
@@ -77,6 +78,14 @@ public class VCenter implements Serializable {
 
     public void setTkey(int tkey) {
         this.tkey = tkey;
+    }
+
+    public String getManagerHost() {
+        return managerHost;
+    }
+
+    public void setManagerHost(String managerHost) {
+        this.managerHost = managerHost;
     }
 
     @Override

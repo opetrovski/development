@@ -106,7 +106,7 @@ public class ScriptTest {
         script.os = LINUX;
 
         // when
-        script.insertServiceParameter();
+        script.insertParametersIntoScript();
         String patchedScript = script.script;
 
         // then

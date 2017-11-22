@@ -10,6 +10,7 @@ package org.oscm.app.vmware.business;
 
 import static java.util.regex.Pattern.MULTILINE;
 import static java.util.regex.Pattern.compile;
+import static org.oscm.app.vmware.business.VMPropertyHandler.MANAGER_HOST;
 import static org.oscm.app.vmware.business.VMPropertyHandler.REQUESTING_USER;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_DOMAIN_NAME;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_INSTANCENAME;
@@ -24,6 +25,7 @@ import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NUMBER_OF_NICS;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_PWD;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_URL;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_USERID;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_TARGET_VCENTER_SERVER;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN;
@@ -71,15 +73,14 @@ public class Script {
     private static final String POWERSHELL_EXE = "C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe";
     private static final String LINUX_SCRIPT_DIR = "/tmp/";
     private static final String WINDOWS_SCRIPT_DIR = "C:\\Windows\\Temp\\";
-    static final String HIDDEN_PWD = "*****";
 
     OS os;
     VMPropertyHandler ph;
     ServiceParamRetrieval sp;
+    String script;
 
     private String guestUserId;
     private String guestPassword;
-    String script;
     private String scriptFilename;
     boolean isPowerShellScript = false;
     boolean isCmdShellScript = false;
@@ -304,16 +305,18 @@ public class Script {
         }
     }
 
-    void insertServiceParameter() throws Exception {
+    void insertParametersIntoScript() throws Exception {
         LOG.debug("Script before patching:\n" + script);
 
         String firstLine = script.substring(0,
                 script.indexOf(os.getLineEnding()));
+
         String rest = script.substring(script.indexOf(os.getLineEnding()) + 1,
                 script.length());
 
         StringBuffer parameters = new StringBuffer();
         addOsIndependetServiceParameters(parameters);
+        addManagedHost(parameters);
         if (os == OS.WINDOWS) {
             addServiceParametersForWindowsVms(parameters);
             script = parameters.toString() + os.getLineEnding() + firstLine
@@ -325,6 +328,18 @@ public class Script {
         }
 
         logScriptWithoutPasswords();
+    }
+
+    private void addManagedHost(StringBuffer parameters) {
+        try {
+            DataAccessService das = new DataAccessService(ph.getLocale());
+            das.getVCenterByName(ph.getTargetVCenterServer());
+            parameters.append(buildParameterCommand(MANAGER_HOST, null));
+        } catch (Exception e) {
+            LOG.warn(String.format(
+                    "Couldn't load and add MANAGER_HOST to script because VCenter %s was not found in database",
+                    ph.getTargetVCenterServer()));
+        }
     }
 
     private void addServiceParametersForWindowsVms(StringBuffer sb)
@@ -440,8 +455,7 @@ public class Script {
 
         LOG.debug("");
 
-        String vcenter = ph
-                .getServiceSetting(VMPropertyHandler.TS_TARGET_VCENTER_SERVER);
+        String vcenter = ph.getServiceSetting(TS_TARGET_VCENTER_SERVER);
         VimPortType vimPort = vmw.getConnection().getService();
         ServiceConnection conn = new ServiceConnection(vimPort,
                 vmw.getConnection().getServiceContent());
@@ -458,7 +472,7 @@ public class Script {
         auth.setPassword(guestPassword);
         auth.setInteractiveSession(false);
 
-        insertServiceParameter();
+        insertParametersIntoScript();
 
         DataAccessService das = new DataAccessService(ph.getLocale());
         URL vSphereURL = new URL(das.getCredentials(vcenter).getURL());
