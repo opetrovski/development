@@ -8,6 +8,8 @@
 
 package org.oscm.app.vmware.business;
 
+import static java.util.regex.Pattern.MULTILINE;
+import static java.util.regex.Pattern.compile;
 import static org.oscm.app.vmware.business.VMPropertyHandler.REQUESTING_USER;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_DOMAIN_NAME;
 import static org.oscm.app.vmware.business.VMPropertyHandler.TS_INSTANCENAME;
@@ -36,6 +38,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -300,7 +304,7 @@ public class Script {
         }
     }
 
-    String insertServiceParameter() throws Exception {
+    void insertServiceParameter() throws Exception {
         LOG.debug("Script before patching:\n" + script);
 
         String firstLine = script.substring(0,
@@ -308,55 +312,23 @@ public class Script {
         String rest = script.substring(script.indexOf(os.getLineEnding()) + 1,
                 script.length());
 
-        StringBuffer sb = new StringBuffer();
-        List<String> parameters = new ArrayList<>();
-        addOsIndependetServiceParameters(sb, parameters);
+        StringBuffer parameters = new StringBuffer();
+        addOsIndependetServiceParameters(parameters);
         if (os == OS.WINDOWS) {
-            addServiceParametersForWindowsVms(sb, parameters);
-        } else {
-            addServiceParametersForLinuxVms(sb, parameters);
-        }
-
-        String patchedScript;
-        if (os == OS.WINDOWS) {
-            patchedScript = sb.toString() + os.getLineEnding() + firstLine
+            addServiceParametersForWindowsVms(parameters);
+            script = parameters.toString() + os.getLineEnding() + firstLine
                     + os.getLineEnding() + rest;
         } else {
-            patchedScript = firstLine + os.getLineEnding() + sb.toString()
+            addServiceParametersForLinuxVms(parameters);
+            script = firstLine + os.getLineEnding() + parameters.toString()
                     + os.getLineEnding() + rest;
         }
 
-        String logPatchedScript = hidePasswords(patchedScript, parameters, os);
-        logScript(logPatchedScript);
-
-        return patchedScript;
+        logScriptWithoutPasswords();
     }
 
-    void logScript(String patchedScript) {
-        LOG.debug("Patched script:\n" + patchedScript);
-    }
-
-    String hidePasswords(String script, List<String> passwords, OS os) {
-        final String pwdPrefix = "_PWD=";
-        String logScript = script;
-        for (String password : passwords) {
-            if (OS.LINUX.equals(os)) {
-                logScript = logScript.replace(pwdPrefix + "'" + password + "'",
-                        pwdPrefix + "'" + HIDDEN_PWD + "'");
-            } else if (OS.WINDOWS.equals(os)) {
-                logScript = logScript.replace(
-                        pwdPrefix + password + os.getLineEnding(),
-                        pwdPrefix + HIDDEN_PWD + os.getLineEnding());
-            }
-        }
-        return logScript;
-    }
-
-    private void addServiceParametersForWindowsVms(StringBuffer sb,
-            List<String> passwords) throws Exception {
-
-        passwords.add(sp.getServiceSetting(TS_WINDOWS_LOCAL_ADMIN_PWD));
-        passwords.add(sp.getServiceSetting(TS_WINDOWS_DOMAIN_ADMIN_PWD));
+    private void addServiceParametersForWindowsVms(StringBuffer sb)
+            throws Exception {
 
         sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN));
         sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN_PWD));
@@ -366,10 +338,8 @@ public class Script {
         sb.append(buildParameterCommand(TS_WINDOWS_WORKGROUP));
     }
 
-    private void addServiceParametersForLinuxVms(StringBuffer sb,
-            List<String> passwords) throws Exception {
-
-        passwords.add(sp.getServiceSetting(TS_LINUX_ROOT_PWD));
+    private void addServiceParametersForLinuxVms(StringBuffer sb)
+            throws Exception {
 
         sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN));
         sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN_PWD));
@@ -377,22 +347,17 @@ public class Script {
         sb.append(buildParameterCommand(TS_DOMAIN_NAME));
     }
 
-    private void addOsIndependetServiceParameters(StringBuffer sb,
-            List<String> passwords) throws Exception {
+    private void addOsIndependetServiceParameters(StringBuffer sb)
+            throws Exception {
 
         sb.append(buildParameterCommand(TS_INSTANCENAME, ph.getInstanceName()));
         sb.append(buildParameterCommand(REQUESTING_USER));
-        addNetworkServiceParameters(sb);
+        addScriptParameters(sb);
         addDataDiskParameters(sb);
-
-        addScriptParameters(sb, passwords);
+        addNetworkServiceParameters(sb);
     }
 
-    private void addScriptParameters(StringBuffer sb, List<String> passwords)
-            throws Exception {
-
-        passwords.add(sp.getServiceSetting(TS_SCRIPT_PWD));
-
+    private void addScriptParameters(StringBuffer sb) throws Exception {
         sb.append(buildParameterCommand(TS_SCRIPT_URL));
         sb.append(buildParameterCommand(TS_SCRIPT_USERID));
         sb.append(buildParameterCommand(TS_SCRIPT_PWD));
@@ -432,6 +397,10 @@ public class Script {
         }
     }
 
+    private String getIndexedParam(String param, int index) {
+        return param.replace('1', Integer.toString(index).charAt(0));
+    }
+
     private String buildParameterCommand(String key) throws Exception {
         return buildParameterCommand(key, sp.getServiceSetting(key));
     }
@@ -448,8 +417,22 @@ public class Script {
         }
     }
 
-    private String getIndexedParam(String param, int index) {
-        return param.replace('1', Integer.toString(index).charAt(0));
+    private void logScriptWithoutPasswords() {
+        LOG.debug("Patched script:\n" + replacePasswords());
+    }
+
+    String replacePasswords() {
+        StringBuffer sb = new StringBuffer();
+
+        Pattern pattern = compile("(^.+?_PWD=')(.*)('$)", MULTILINE);
+        Matcher matcher = pattern.matcher(script);
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, "$1" + "*****" + "$3");
+
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
     }
 
     public void execute(VMwareClient vmw, ManagedObjectReference vmwInstance)
@@ -475,13 +458,13 @@ public class Script {
         auth.setPassword(guestPassword);
         auth.setInteractiveSession(false);
 
-        String scriptPatched = insertServiceParameter();
+        insertServiceParameter();
 
         DataAccessService das = new DataAccessService(ph.getLocale());
         URL vSphereURL = new URL(das.getCredentials(vcenter).getURL());
 
-        uploadScriptFileToVM(vimPort, vmwInstance, fileManagerRef, auth,
-                scriptPatched, vSphereURL.getHost());
+        uploadScriptFileToVM(vimPort, vmwInstance, fileManagerRef, auth, script,
+                vSphereURL.getHost());
         LOG.debug("Executing CreateTemporaryFile guest operation");
         String scriptOutputTextfile = vimPort.createTemporaryFileInGuest(
                 fileManagerRef, vmwInstance, auth, "", "", "");
