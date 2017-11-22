@@ -37,6 +37,10 @@ public class ServiceParamRetrieval {
     private VOServiceDetails service;
     private VMPropertyHandler ph;
 
+    public ServiceParamRetrieval() {
+
+    }
+
     public ServiceParamRetrieval(VMPropertyHandler ph) {
         this.ph = ph;
         String customerOrgId = ph.getSettings().getOrganizationId();
@@ -62,6 +66,10 @@ public class ServiceParamRetrieval {
             logger.error("Failed to initialize ServiceParameter. customerOrg: "
                     + customerOrgId, e);
         }
+    }
+
+    public void setPh(VMPropertyHandler ph) {
+        this.ph = ph;
     }
 
     public String getServiceSetting(String parameterId) throws Exception {

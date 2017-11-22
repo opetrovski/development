@@ -8,6 +8,26 @@
 
 package org.oscm.app.vmware.business;
 
+import static org.oscm.app.vmware.business.VMPropertyHandler.REQUESTING_USER;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_DOMAIN_NAME;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_INSTANCENAME;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_LINUX_ROOT_PWD;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_DNS_SERVER;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_DNS_SUFFIX;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_GATEWAY;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_IP_ADDRESS;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_NETWORK_ADAPTER;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NIC1_SUBNET_MASK;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_NUMBER_OF_NICS;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_PWD;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_URL;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_USERID;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_WINDOWS_WORKGROUP;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
@@ -23,7 +43,6 @@ import javax.net.ssl.SSLSession;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.io.IOUtils;
-import org.oscm.app.v1_0.exceptions.APPlatformException;
 import org.oscm.app.vmware.persistence.DataAccessService;
 import org.oscm.app.vmware.remote.bes.ServiceParamRetrieval;
 import org.oscm.app.vmware.remote.vmware.ManagedObjectAccessor;
@@ -50,13 +69,13 @@ public class Script {
     private static final String WINDOWS_SCRIPT_DIR = "C:\\Windows\\Temp\\";
     static final String HIDDEN_PWD = "*****";
 
-    private OS os;
-    private VMPropertyHandler ph;
-    private ServiceParamRetrieval sp;
+    OS os;
+    VMPropertyHandler ph;
+    ServiceParamRetrieval sp;
 
     private String guestUserId;
     private String guestPassword;
-    private String script;
+    String script;
     private String scriptFilename;
     boolean isPowerShellScript = false;
     boolean isCmdShellScript = false;
@@ -105,6 +124,10 @@ public class Script {
         }
     }
 
+    public Script() {
+
+    }
+
     public Script(VMPropertyHandler ph, OS os) throws Exception {
         this.ph = ph;
         this.os = os;
@@ -116,7 +139,8 @@ public class Script {
         // TODO load certificate from vSphere host and install somehow
         disableSSL();
 
-        downloadScriptFile(ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL));
+        downloadScriptFile(
+                ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL));
     }
 
     /**
@@ -276,7 +300,7 @@ public class Script {
         }
     }
 
-    private String insertServiceParameter() throws Exception {
+    String insertServiceParameter() throws Exception {
         LOG.debug("Script before patching:\n" + script);
 
         String firstLine = script.substring(0,
@@ -285,14 +309,13 @@ public class Script {
                 script.length());
 
         StringBuffer sb = new StringBuffer();
-        List<String> passwords = new ArrayList<>();
+        List<String> parameters = new ArrayList<>();
+        addOsIndependetServiceParameters(sb, parameters);
         if (os == OS.WINDOWS) {
-            passwords = addServiceParametersForWindowsVms(sb);
+            addServiceParametersForWindowsVms(sb, parameters);
         } else {
-            passwords = addServiceParametersForLinuxVms(sb);
+            addServiceParametersForLinuxVms(sb, parameters);
         }
-        List<String> scriptPasswords = addOsIndependetServiceParameters(sb);
-        passwords.addAll(scriptPasswords);
 
         String patchedScript;
         if (os == OS.WINDOWS) {
@@ -303,13 +326,17 @@ public class Script {
                     + os.getLineEnding() + rest;
         }
 
-        String logPatchedScript = hidePasswords(patchedScript, passwords, os);
+        String logPatchedScript = hidePasswords(patchedScript, parameters, os);
+        logScript(logPatchedScript);
 
-        LOG.debug("Patched script:\n" + logPatchedScript);
         return patchedScript;
     }
 
-    static String hidePasswords(String script, List<String> passwords, OS os) {
+    void logScript(String patchedScript) {
+        LOG.debug("Patched script:\n" + patchedScript);
+    }
+
+    String hidePasswords(String script, List<String> passwords, OS os) {
         final String pwdPrefix = "_PWD=";
         String logScript = script;
         for (String password : passwords) {
@@ -325,62 +352,50 @@ public class Script {
         return logScript;
     }
 
-    private List<String> addServiceParametersForWindowsVms(StringBuffer sb)
-            throws Exception, APPlatformException {
-        List<String> passwords = new ArrayList<>();
-        passwords.add(sp.getServiceSetting(
-                VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
-        passwords.add(sp.getServiceSetting(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_JOIN));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_DOMAIN_NAME));
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_LOCAL_ADMIN_PWD));
-        sb.append(
-                buildParameterCommand(VMPropertyHandler.TS_WINDOWS_WORKGROUP));
-        return passwords;
+    private void addServiceParametersForWindowsVms(StringBuffer sb,
+            List<String> passwords) throws Exception {
+
+        passwords.add(sp.getServiceSetting(TS_WINDOWS_LOCAL_ADMIN_PWD));
+        passwords.add(sp.getServiceSetting(TS_WINDOWS_DOMAIN_ADMIN_PWD));
+
+        sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN));
+        sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN_PWD));
+        sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_JOIN));
+        sb.append(buildParameterCommand(TS_DOMAIN_NAME));
+        sb.append(buildParameterCommand(TS_WINDOWS_LOCAL_ADMIN_PWD));
+        sb.append(buildParameterCommand(TS_WINDOWS_WORKGROUP));
     }
 
-    private List<String> addServiceParametersForLinuxVms(StringBuffer sb)
-            throws Exception, APPlatformException {
+    private void addServiceParametersForLinuxVms(StringBuffer sb,
+            List<String> passwords) throws Exception {
 
-        List<String> passwords = new ArrayList<>();
-        passwords
-                .add(sp.getServiceSetting(VMPropertyHandler.TS_LINUX_ROOT_PWD));
+        passwords.add(sp.getServiceSetting(TS_LINUX_ROOT_PWD));
 
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN));
-        sb.append(buildParameterCommand(
-                VMPropertyHandler.TS_WINDOWS_DOMAIN_ADMIN_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_LINUX_ROOT_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_DOMAIN_NAME));
-        return passwords;
+        sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN));
+        sb.append(buildParameterCommand(TS_WINDOWS_DOMAIN_ADMIN_PWD));
+        sb.append(buildParameterCommand(TS_LINUX_ROOT_PWD));
+        sb.append(buildParameterCommand(TS_DOMAIN_NAME));
     }
 
-    List<String> addOsIndependetServiceParameters(StringBuffer sb)
-            throws Exception {
-        List<String> passwords = new ArrayList<>();
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_INSTANCENAME,
-                ph.getInstanceName()));
-        sb.append(buildParameterCommand(VMPropertyHandler.REQUESTING_USER));
-        passwords = addScriptParameters(sb);
+    private void addOsIndependetServiceParameters(StringBuffer sb,
+            List<String> passwords) throws Exception {
+
+        sb.append(buildParameterCommand(TS_INSTANCENAME, ph.getInstanceName()));
+        sb.append(buildParameterCommand(REQUESTING_USER));
         addNetworkServiceParameters(sb);
         addDataDiskParameters(sb);
-        return passwords;
+
+        addScriptParameters(sb, passwords);
     }
 
-    List<String> addScriptParameters(StringBuffer sb) throws Exception {
-        List<String> passwords = new ArrayList<>();
-        passwords.add(sp.getServiceSetting(VMPropertyHandler.TS_SCRIPT_PWD));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_SCRIPT_URL));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_SCRIPT_USERID));
-        sb.append(buildParameterCommand(VMPropertyHandler.TS_SCRIPT_PWD));
-        return passwords;
+    private void addScriptParameters(StringBuffer sb, List<String> passwords)
+            throws Exception {
+
+        passwords.add(sp.getServiceSetting(TS_SCRIPT_PWD));
+
+        sb.append(buildParameterCommand(TS_SCRIPT_URL));
+        sb.append(buildParameterCommand(TS_SCRIPT_USERID));
+        sb.append(buildParameterCommand(TS_SCRIPT_PWD));
     }
 
     private void addDataDiskParameters(StringBuffer sb) throws Exception {
@@ -393,30 +408,24 @@ public class Script {
     }
 
     private void addNetworkServiceParameters(StringBuffer sb) throws Exception {
-        int numNics = Integer.parseInt(
-                sp.getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS));
+        int numNics = Integer.parseInt(sp.getServiceSetting(TS_NUMBER_OF_NICS));
         while (numNics > 0) {
-            String param = getIndexedParam(VMPropertyHandler.TS_NIC1_DNS_SERVER,
-                    numNics);
+            String param = getIndexedParam(TS_NIC1_DNS_SERVER, numNics);
             sb.append(buildParameterCommand(param));
 
-            param = getIndexedParam(VMPropertyHandler.TS_NIC1_DNS_SUFFIX,
-                    numNics);
+            param = getIndexedParam(TS_NIC1_DNS_SUFFIX, numNics);
             sb.append(buildParameterCommand(param));
 
-            param = getIndexedParam(VMPropertyHandler.TS_NIC1_GATEWAY, numNics);
+            param = getIndexedParam(TS_NIC1_GATEWAY, numNics);
             sb.append(buildParameterCommand(param));
 
-            param = getIndexedParam(VMPropertyHandler.TS_NIC1_IP_ADDRESS,
-                    numNics);
+            param = getIndexedParam(TS_NIC1_IP_ADDRESS, numNics);
             sb.append(buildParameterCommand(param));
 
-            param = getIndexedParam(VMPropertyHandler.TS_NIC1_NETWORK_ADAPTER,
-                    numNics);
+            param = getIndexedParam(TS_NIC1_NETWORK_ADAPTER, numNics);
             sb.append(buildParameterCommand(param));
 
-            param = getIndexedParam(VMPropertyHandler.TS_NIC1_SUBNET_MASK,
-                    numNics);
+            param = getIndexedParam(TS_NIC1_SUBNET_MASK, numNics);
             sb.append(buildParameterCommand(param));
 
             numNics--;
@@ -480,7 +489,6 @@ public class Script {
                 + scriptOutputTextfile + " inside the guest");
 
         GuestProgramSpec spec = new GuestProgramSpec();
-
         if (os == OS.WINDOWS) {
             if (isPowerShellScript) {
                 spec.setProgramPath(POWERSHELL_EXE);
