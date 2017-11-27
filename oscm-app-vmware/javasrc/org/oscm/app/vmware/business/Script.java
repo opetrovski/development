@@ -49,6 +49,7 @@ import javax.net.ssl.SSLSession;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.io.IOUtils;
+import org.oscm.app.vmware.business.model.VCenter;
 import org.oscm.app.vmware.persistence.DataAccessService;
 import org.oscm.app.vmware.remote.bes.ServiceParamRetrieval;
 import org.oscm.app.vmware.remote.vmware.ManagedObjectAccessor;
@@ -333,11 +334,12 @@ public class Script {
     private void addManagedHost(StringBuffer parameters) {
         try {
             DataAccessService das = new DataAccessService(ph.getLocale());
-            das.getVCenterByName(ph.getTargetVCenterServer());
-            parameters.append(buildParameterCommand(MANAGER_HOST, null));
+            VCenter vcenter = das.getVCenterByName(ph.getTargetVCenterServer());
+            parameters.append(buildParameterCommand(MANAGER_HOST,
+                    vcenter.getManagerHost()));
         } catch (Exception e) {
             LOG.warn(String.format(
-                    "Couldn't load and add MANAGER_HOST to script because VCenter %s was not found in database",
+                    "Couldn't load and add MANAGER_HOST to script because VCenter %s was not found in VMware database",
                     ph.getTargetVCenterServer()));
         }
     }
