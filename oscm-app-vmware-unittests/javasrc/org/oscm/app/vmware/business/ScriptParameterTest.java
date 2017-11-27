@@ -1,9 +1,9 @@
 /*******************************************************************************
- *
- *  Copyright FUJITSU LIMITED 2016
- *
- *  Creation Date: 2016-05-24
- *
+ *                                                                              
+ *  Copyright FUJITSU LIMITED 2017                                           
+ *                                                                                                                                 
+ *  Creation Date: 27.11.2017                                                      
+ *                                                                              
  *******************************************************************************/
 
 package org.oscm.app.vmware.business;
@@ -49,21 +49,25 @@ import org.oscm.app.vmware.business.Script.OS;
 import org.oscm.app.vmware.persistence.DataAccessService;
 import org.oscm.app.vmware.remote.bes.ServiceParamRetrieval;
 
-public class ScriptTest {
+/**
+ * @author kulle
+ *
+ */
+public class ScriptParameterTest {
 
-    private Script script;
+    private ScriptParameter scriptParameter;
 
     private OS os;
     private VMPropertyHandler ph;
 
     @Before
     public void before() throws Exception {
-        script = spy(new Script());
-        script.os = os;
-        script.ph = ph = initializePropertyHandler();
+        scriptParameter = spy(new ScriptParameter());
+        scriptParameter.os = os;
+        scriptParameter.ph = ph = initializePropertyHandler();
         ph.useMock(mock(DataAccessService.class));
-        script.sp = new ServiceParamRetrieval();
-        script.sp.setPh(ph);
+        scriptParameter.sp = new ServiceParamRetrieval();
+        scriptParameter.sp.setPh(ph);
     }
 
     private VMPropertyHandler initializePropertyHandler() {
@@ -101,10 +105,10 @@ public class ScriptTest {
     @Test
     public void splitScriptAfterFirstLine_dos() throws Exception {
         // given
-        script.script = "line1\r\nline2\r\nline3";
+        scriptParameter.script = "line1\r\nline2\r\nline3";
 
         // when
-        String[] lines = script.splitScriptAfterFirstLine();
+        String[] lines = scriptParameter.splitScriptAfterFirstLine();
 
         // then
         assertEquals("line1", lines[0]);
@@ -114,10 +118,10 @@ public class ScriptTest {
     @Test
     public void splitScriptAfterFirstLine_macintosh() throws Exception {
         // given
-        script.script = "line1\rline2\rline3";
+        scriptParameter.script = "line1\rline2\rline3";
 
         // when
-        String[] lines = script.splitScriptAfterFirstLine();
+        String[] lines = scriptParameter.splitScriptAfterFirstLine();
 
         // then
         assertEquals("line1", lines[0]);
@@ -127,10 +131,10 @@ public class ScriptTest {
     @Test
     public void splitScriptAfterFirstLine_unix() throws Exception {
         // given
-        script.script = "line1\nline2\nline3";
+        scriptParameter.script = "line1\nline2\nline3";
 
         // when
-        String[] lines = script.splitScriptAfterFirstLine();
+        String[] lines = scriptParameter.splitScriptAfterFirstLine();
 
         // then
         assertEquals("line1", lines[0]);
@@ -140,10 +144,10 @@ public class ScriptTest {
     @Test
     public void splitScriptAfterFirstLine_mixed() throws Exception {
         // given
-        script.script = "line1\nline2\r\nline3";
+        scriptParameter.script = "line1\nline2\r\nline3";
 
         // when
-        String[] lines = script.splitScriptAfterFirstLine();
+        String[] lines = scriptParameter.splitScriptAfterFirstLine();
 
         // then
         assertEquals("line1", lines[0]);
@@ -153,10 +157,10 @@ public class ScriptTest {
     @Test
     public void splitScriptAfterFirstLine_mixed2() throws Exception {
         // given
-        script.script = "line1\n\r\nline2\r\nline3";
+        scriptParameter.script = "line1\n\r\nline2\r\nline3";
 
         // when
-        String[] lines = script.splitScriptAfterFirstLine();
+        String[] lines = scriptParameter.splitScriptAfterFirstLine();
 
         // then
         assertEquals("line1", lines[0]);
@@ -164,16 +168,16 @@ public class ScriptTest {
     }
 
     @Test
-    public void insertServiceParameter() throws Exception {
+    public void insertParameters() throws Exception {
         // given
-        String linuxScript = new String(Files.readAllBytes(
-                Paths.get(ScriptTest.class.getResource("/linux.sh").toURI())));
-        script.script = linuxScript;
-        script.os = LINUX;
+        String linuxScript = new String(Files.readAllBytes(Paths.get(
+                ScriptParameterTest.class.getResource("/linux.sh").toURI())));
+        scriptParameter.script = linuxScript;
+        scriptParameter.os = LINUX;
 
         // when
-        script.insertParametersIntoScript();
-        String patchedScript = script.script;
+        scriptParameter.insertParameters(scriptParameter.script);
+        String patchedScript = scriptParameter.script;
 
         // then
         assertTrue(patchedScript.contains("INSTANCENAME='ts_instancename'"));
@@ -206,13 +210,13 @@ public class ScriptTest {
     public void replacePasswords_linux() throws Exception {
         // given
         String linuxScript = new String(
-                Files.readAllBytes(Paths.get(ScriptTest.class
+                Files.readAllBytes(Paths.get(ScriptParameterTest.class
                         .getResource("/linux-with-passwords.sh").toURI())));
-        script.script = linuxScript;
-        script.os = LINUX;
+        scriptParameter.script = linuxScript;
+        scriptParameter.os = LINUX;
 
         // when
-        String withoutPasswords = script.replacePasswords();
+        String withoutPasswords = scriptParameter.replacePasswords();
 
         // then
         Pattern pattern = compile("^.+?_PWD='(?!\\*{5}'$)", MULTILINE);
