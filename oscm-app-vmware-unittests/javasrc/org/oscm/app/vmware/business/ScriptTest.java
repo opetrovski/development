@@ -10,6 +10,7 @@ package org.oscm.app.vmware.business;
 
 import static java.util.regex.Pattern.MULTILINE;
 import static java.util.regex.Pattern.compile;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -95,6 +96,71 @@ public class ScriptTest {
         ProvisioningSettings settings = new ProvisioningSettings(parameters,
                 configSettings, "en");
         return new VMPropertyHandler(settings);
+    }
+
+    @Test
+    public void splitScriptAfterFirstLine_dos() throws Exception {
+        // given
+        script.script = "line1\r\nline2\r\nline3";
+
+        // when
+        String[] lines = script.splitScriptAfterFirstLine();
+
+        // then
+        assertEquals("line1", lines[0]);
+        assertEquals("line2\r\nline3", lines[1]);
+    }
+
+    @Test
+    public void splitScriptAfterFirstLine_macintosh() throws Exception {
+        // given
+        script.script = "line1\rline2\rline3";
+
+        // when
+        String[] lines = script.splitScriptAfterFirstLine();
+
+        // then
+        assertEquals("line1", lines[0]);
+        assertEquals("line2\rline3", lines[1]);
+    }
+
+    @Test
+    public void splitScriptAfterFirstLine_unix() throws Exception {
+        // given
+        script.script = "line1\nline2\nline3";
+
+        // when
+        String[] lines = script.splitScriptAfterFirstLine();
+
+        // then
+        assertEquals("line1", lines[0]);
+        assertEquals("line2\nline3", lines[1]);
+    }
+
+    @Test
+    public void splitScriptAfterFirstLine_mixed() throws Exception {
+        // given
+        script.script = "line1\nline2\r\nline3";
+
+        // when
+        String[] lines = script.splitScriptAfterFirstLine();
+
+        // then
+        assertEquals("line1", lines[0]);
+        assertEquals("line2\r\nline3", lines[1]);
+    }
+
+    @Test
+    public void splitScriptAfterFirstLine_mixed2() throws Exception {
+        // given
+        script.script = "line1\n\r\nline2\r\nline3";
+
+        // when
+        String[] lines = script.splitScriptAfterFirstLine();
+
+        // then
+        assertEquals("line1", lines[0]);
+        assertEquals("\r\nline2\r\nline3", lines[1]);
     }
 
     @Test

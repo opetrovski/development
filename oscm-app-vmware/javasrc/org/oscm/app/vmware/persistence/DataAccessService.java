@@ -187,6 +187,8 @@ public class DataAccessService {
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
 
+            stmt.setString(1, name);
+
             @SuppressWarnings("resource")
             ResultSet rs = stmt.executeQuery();
 

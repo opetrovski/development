@@ -8,6 +8,7 @@
 
 package org.oscm.app.vmware.business;
 
+import static java.lang.String.format;
 import static java.util.regex.Pattern.MULTILINE;
 import static java.util.regex.Pattern.compile;
 import static org.oscm.app.vmware.business.VMPropertyHandler.MANAGER_HOST;
@@ -74,6 +75,10 @@ public class Script {
     private static final String POWERSHELL_EXE = "C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe";
     private static final String LINUX_SCRIPT_DIR = "/tmp/";
     private static final String WINDOWS_SCRIPT_DIR = "C:\\Windows\\Temp\\";
+
+    private static final String EOL_DOS = "\r\n";
+    private static final String EOL_MACINTOSH = "\r";
+    private static final String EOL_UNIX = "\n";
 
     OS os;
     VMPropertyHandler ph;
@@ -145,8 +150,7 @@ public class Script {
         // TODO load certificate from vSphere host and install somehow
         disableSSL();
 
-        downloadScriptFile(
-                ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL));
+        downloadScriptFile(ph.getServiceSetting(TS_SCRIPT_URL));
     }
 
     /**
@@ -206,6 +210,7 @@ public class Script {
 
         script = writer.toString();
         scriptFilename = url.substring(url.lastIndexOf("/") + 1, url.length());
+
         isPowerShellScript = url.endsWith("ps1");
         isCmdShellScript = url.endsWith("bat");
         isLinuxShellScript = url.endsWith("sh");
@@ -309,11 +314,9 @@ public class Script {
     void insertParametersIntoScript() throws Exception {
         LOG.debug("Script before patching:\n" + script);
 
-        String firstLine = script.substring(0,
-                script.indexOf(os.getLineEnding()));
-
-        String rest = script.substring(script.indexOf(os.getLineEnding()) + 1,
-                script.length());
+        String[] lines = splitScriptAfterFirstLine();
+        String firstLine = lines[0];
+        String rest = lines[1];
 
         StringBuffer parameters = new StringBuffer();
         addOsIndependetServiceParameters(parameters);
@@ -329,6 +332,11 @@ public class Script {
         }
 
         logScriptWithoutPasswords();
+    }
+
+    String[] splitScriptAfterFirstLine() {
+        return script
+                .split(format("%s|%s|%s", EOL_DOS, EOL_MACINTOSH, EOL_UNIX), 2);
     }
 
     private void addManagedHost(StringBuffer parameters) {
@@ -455,7 +463,10 @@ public class Script {
     public void execute(VMwareClient vmw, ManagedObjectReference vmwInstance)
             throws Exception {
 
-        LOG.debug("");
+        if (script == null || script.trim().length() == 0) {
+            LOG.info("Empty script, skipped execution");
+            return;
+        }
 
         String vcenter = ph.getServiceSetting(TS_TARGET_VCENTER_SERVER);
         VimPortType vimPort = vmw.getConnection().getService();

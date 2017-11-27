@@ -232,14 +232,8 @@ public class VM {
     }
 
     public void runScript() throws Exception {
-        LOG.debug("instanceName: " + instanceName);
-
-        String scriptURL = paramHandler
-                .getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL);
-        if (scriptURL != null) {
-            Script script = new Script(paramHandler, detectOs());
-            script.execute(vmw, vmInstance);
-        }
+        Script script = new Script(paramHandler, detectOs());
+        script.execute(vmw, vmInstance);
     }
 
     public int getNumberOfNICs() throws Exception {

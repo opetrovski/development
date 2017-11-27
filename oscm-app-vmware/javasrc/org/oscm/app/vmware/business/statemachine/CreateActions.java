@@ -8,6 +8,9 @@
 
 package org.oscm.app.vmware.business.statemachine;
 
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_SCRIPT_URL;
+import static org.oscm.app.vmware.business.VMPropertyHandler.TS_TARGET_VCENTER_SERVER;
+
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.regex.Matcher;
@@ -104,15 +107,13 @@ public class CreateActions extends Actions {
             @SuppressWarnings("unused") InstanceStatus result) {
 
         VMPropertyHandler ph = new VMPropertyHandler(settings);
-        String vcenter = ph
-                .getServiceSetting(VMPropertyHandler.TS_TARGET_VCENTER_SERVER);
+        String vcenter = ph.getServiceSetting(TS_TARGET_VCENTER_SERVER);
         VMwareClient vmClient = null;
         try {
             vmClient = VMClientPool.getInstance().getPool()
                     .borrowObject(vcenter);
-            if (ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL) != null
-                    && ph.getServiceSetting(VMPropertyHandler.TS_SCRIPT_URL)
-                            .trim().length() > 0) {
+            if (ph.getServiceSetting(TS_SCRIPT_URL) != null && ph
+                    .getServiceSetting(TS_SCRIPT_URL).trim().length() > 0) {
                 VM vm = new VM(vmClient, ph);
                 vm.runScript();
             }
