@@ -152,7 +152,7 @@ public class DataAccessService {
 
     public List<VCenter> getVCenter() throws Exception {
         logger.debug("");
-        List<VCenter> vcenter = new ArrayList<VCenter>();
+        List<VCenter> vcenter = new ArrayList<>();
         String query = "SELECT tkey,name,identifier,url,userid,password,manager_host FROM vcenter";
         try (Connection con = getDatasource().getConnection();
                 PreparedStatement stmt = con.prepareStatement(query);) {
@@ -372,7 +372,7 @@ public class DataAccessService {
     }
 
     public List<VLAN> getVLANs(Cluster cluster) throws Exception {
-        List<VLAN> vlans = new ArrayList<VLAN>();
+        List<VLAN> vlans = new ArrayList<>();
         logger.debug("cluster: " + cluster.getName() + " cluster_tkey: "
                 + cluster.getTkey() + " datacenter_tkey: "
                 + cluster.getDatacenter_tkey());
@@ -561,6 +561,38 @@ public class DataAccessService {
             logger.error("Failed to retrieve vlans for vcenter: " + vcenter
                     + "  datacenter: " + datacenter + "  cluster: " + cluster,
                     e);
+            return null;
+        }
+
+        logger.debug("retrieved vlan: " + vlan);
+        return vlan;
+    }
+
+    @SuppressWarnings("resource")
+    public String getVLANForService(String vcenter, String datacenter,
+            String cluster, String service) {
+
+        logger.debug("vcenter: " + vcenter + "  datacenter: " + datacenter
+                + "  cluster: " + cluster + "  service: " + service);
+
+        String vlan = null;
+        // String query = "SELECT tkey FROM vlan WHERE cluster_tkey = (SELECT
+        // tkey from cluster where name = ? and datacenter_tkey = (SELECT tkey
+        // FROM datacenter WHERE name = ? and vcenter_tkey = (SELECT TKEY FROM
+        // vcenter WHERE NAME = ?)))";
+        String query = "SELECT name FROM vlan WHERE tkey = (SELECT vlan_tkey from service_vlan_mapping where service = ?)";
+        try (Connection con = getDatasource().getConnection();
+                PreparedStatement stmt = con.prepareStatement(query);) {
+            stmt.setString(1, service);
+            @SuppressWarnings("resource")
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                vlan = rs.getString("name");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to retrieve vlan for vcenter: " + vcenter
+                    + "  datacenter: " + datacenter + "  cluster: " + cluster
+                    + "  service: " + service, e);
             return null;
         }
 

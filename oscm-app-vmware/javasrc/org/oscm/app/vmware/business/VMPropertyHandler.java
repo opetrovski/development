@@ -155,7 +155,10 @@ public class VMPropertyHandler {
      * several stages until it is automatically deleted
      */
     public enum SubscriptionEndStatus {
-        UNDEFINED, SCHEDULED_FOR_NOTIFICATION, SCHEDULED_FOR_DEACTIVATION, SCHEDULED_FOR_DELETION
+        UNDEFINED,
+        SCHEDULED_FOR_NOTIFICATION,
+        SCHEDULED_FOR_DEACTIVATION,
+        SCHEDULED_FOR_DELETION
     };
 
     public static final String SUBSCRIPTION_END_STATUS = "SUBSCRIPTION_END_STATUS";
@@ -514,85 +517,96 @@ public class VMPropertyHandler {
         LOG.debug("vcenter: " + vcenter + " datacenter: " + datacenter
                 + " cluster: " + cluster);
 
-        int numberOfNICs = Integer.parseInt(
-                getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS));
+        String numNics = getServiceSetting(VMPropertyHandler.TS_NUMBER_OF_NICS);
+        if (numNics == null || numNics.trim().length() == 0) {
+            throw new APPlatformException(
+                    Messages.getAll("error_num_nics", new Object[] {}).get(0)
+                            .getText());
+        }
+
+        int numberOfNICs = Integer.parseInt(numNics);
+        LOG.debug("numberOfNICs: " + numberOfNICs);
+
         for (int i = 1; i <= numberOfNICs; i++) {
 
-            if (isAdapterConfiguredByDatabase(i)) {
-                String vlan = das.getVLANwithMostIPs(vcenter, datacenter,
-                        cluster);
-                if (vlan == null) {
-                    throw new APPlatformException(Messages.getAll(
-                            "error_read_vlans",
-                            new Object[] { vcenter, datacenter, cluster })
-                            .get(0).getText());
-                }
+            if (isAdapterConfiguredByDhcp(i)) {
+                LOG.debug("Adapter " + i + " is configured via DHCP.");
+                continue;
+            } else if (isAdapterConfiguredManually(i)) {
+                LOG.debug("Adapter " + i + " is configured manually.");
+                continue;
+            } else {
+                LOG.debug("Adapter " + i + " is configured via database.");
+            }
 
-                settings.getParameters().put("NIC" + i + "_NETWORK_ADAPTER",
+            String service = getServiceSetting("NOWIT_ITSERVICE");
+            // String vlan = das.getVLANwithMostIPs(vcenter, datacenter,
+            // cluster);
+            String vlan = das.getVLANForService(vcenter, datacenter, cluster,
+                    service);
+            if (vlan == null) {
+                throw new APPlatformException(
+                        Messages.getAll("error_read_vlan_for_service",
+                                new Object[] { service }).get(0).getText());
+            }
+
+            LOG.debug("Service-VLAN mapping: " + service + " -> " + vlan);
+            settings.getParameters().put("NIC" + i + "_NETWORK_ADAPTER", vlan);
+
+            String ipAddress;
+            VMwareNetwork nw;
+            try {
+                ipAddress = das.reserveIPAddress(vcenter, datacenter, cluster,
                         vlan);
+                nw = das.getNetworkSettings(vcenter, datacenter, cluster, vlan);
+            } catch (Exception e) {
+                throw new APPlatformException(Messages.getAll(
+                        "error_read_static_network_config",
+                        new Object[] { Integer.valueOf(i), e.getMessage() })
+                        .get(0).getText());
+            }
 
-                String ipAddress;
-                VMwareNetwork nw;
-                try {
-                    ipAddress = das.reserveIPAddress(vcenter, datacenter,
-                            cluster, vlan);
-                    nw = das.getNetworkSettings(vcenter, datacenter, cluster,
-                            vlan);
-                } catch (Exception e) {
-                    throw new APPlatformException(Messages.getAll(
-                            "error_read_static_network_config",
-                            new Object[] { Integer.valueOf(i), e.getMessage() })
-                            .get(0).getText());
-                }
+            LOG.debug("NIC" + i + " VLAN: " + vlan + " IP address: " + ipAddress
+                    + " SubnetMask: " + nw.getSubnetMask() + " Gateway: "
+                    + nw.getGateway() + " DNS Server: " + nw.getDnsServer()
+                    + " DNS Suffix: " + nw.getDnsSuffix());
 
-                LOG.debug("NIC" + i + " VLAN: " + vlan + " IP address: "
-                        + ipAddress + " SubnetMask: " + nw.getSubnetMask()
-                        + " Gateway: " + nw.getGateway() + " DNS Server: "
-                        + nw.getDnsServer() + " DNS Suffix: "
-                        + nw.getDnsSuffix());
-
-                if (i == 1) {
-                    settings.getParameters().put(TS_NIC1_IP_ADDRESS, ipAddress);
-                    settings.getParameters().put(TS_NIC1_SUBNET_MASK,
-                            nw.getSubnetMask());
-                    settings.getParameters().put(TS_NIC1_GATEWAY,
-                            nw.getGateway());
-                    settings.getParameters().put(TS_NIC1_DNS_SERVER,
-                            nw.getDnsServer());
-                    settings.getParameters().put(TS_NIC1_DNS_SUFFIX,
-                            nw.getDnsSuffix());
-                } else if (i == 2) {
-                    settings.getParameters().put(TS_NIC2_IP_ADDRESS, ipAddress);
-                    settings.getParameters().put(TS_NIC2_SUBNET_MASK,
-                            nw.getSubnetMask());
-                    settings.getParameters().put(TS_NIC2_GATEWAY,
-                            nw.getGateway());
-                    settings.getParameters().put(TS_NIC2_DNS_SERVER,
-                            nw.getDnsServer());
-                    settings.getParameters().put(TS_NIC2_DNS_SUFFIX,
-                            nw.getDnsSuffix());
-                } else if (i == 3) {
-                    settings.getParameters().put(TS_NIC3_IP_ADDRESS, ipAddress);
-                    settings.getParameters().put(TS_NIC3_SUBNET_MASK,
-                            nw.getSubnetMask());
-                    settings.getParameters().put(TS_NIC3_GATEWAY,
-                            nw.getGateway());
-                    settings.getParameters().put(TS_NIC3_DNS_SERVER,
-                            nw.getDnsServer());
-                    settings.getParameters().put(TS_NIC3_DNS_SUFFIX,
-                            nw.getDnsSuffix());
-                } else if (i == 4) {
-                    settings.getParameters().put(TS_NIC4_IP_ADDRESS, ipAddress);
-                    settings.getParameters().put(TS_NIC4_SUBNET_MASK,
-                            nw.getSubnetMask());
-                    settings.getParameters().put(TS_NIC4_GATEWAY,
-                            nw.getGateway());
-                    settings.getParameters().put(TS_NIC4_DNS_SERVER,
-                            nw.getDnsServer());
-                    settings.getParameters().put(TS_NIC4_DNS_SUFFIX,
-                            nw.getDnsSuffix());
-                }
-
+            if (i == 1) {
+                settings.getParameters().put(TS_NIC1_IP_ADDRESS, ipAddress);
+                settings.getParameters().put(TS_NIC1_SUBNET_MASK,
+                        nw.getSubnetMask());
+                settings.getParameters().put(TS_NIC1_GATEWAY, nw.getGateway());
+                settings.getParameters().put(TS_NIC1_DNS_SERVER,
+                        nw.getDnsServer());
+                settings.getParameters().put(TS_NIC1_DNS_SUFFIX,
+                        nw.getDnsSuffix());
+            } else if (i == 2) {
+                settings.getParameters().put(TS_NIC2_IP_ADDRESS, ipAddress);
+                settings.getParameters().put(TS_NIC2_SUBNET_MASK,
+                        nw.getSubnetMask());
+                settings.getParameters().put(TS_NIC2_GATEWAY, nw.getGateway());
+                settings.getParameters().put(TS_NIC2_DNS_SERVER,
+                        nw.getDnsServer());
+                settings.getParameters().put(TS_NIC2_DNS_SUFFIX,
+                        nw.getDnsSuffix());
+            } else if (i == 3) {
+                settings.getParameters().put(TS_NIC3_IP_ADDRESS, ipAddress);
+                settings.getParameters().put(TS_NIC3_SUBNET_MASK,
+                        nw.getSubnetMask());
+                settings.getParameters().put(TS_NIC3_GATEWAY, nw.getGateway());
+                settings.getParameters().put(TS_NIC3_DNS_SERVER,
+                        nw.getDnsServer());
+                settings.getParameters().put(TS_NIC3_DNS_SUFFIX,
+                        nw.getDnsSuffix());
+            } else if (i == 4) {
+                settings.getParameters().put(TS_NIC4_IP_ADDRESS, ipAddress);
+                settings.getParameters().put(TS_NIC4_SUBNET_MASK,
+                        nw.getSubnetMask());
+                settings.getParameters().put(TS_NIC4_GATEWAY, nw.getGateway());
+                settings.getParameters().put(TS_NIC4_DNS_SERVER,
+                        nw.getDnsServer());
+                settings.getParameters().put(TS_NIC4_DNS_SUFFIX,
+                        nw.getDnsSuffix());
             }
         }
     }
@@ -985,18 +999,15 @@ public class VMPropertyHandler {
 
         XMLGregorianCalendar queueT = info.getQueueTime();
         String queueTime = queueT != null
-                ? queueT.toGregorianCalendar().getTime().toString()
-                : "";
+                ? queueT.toGregorianCalendar().getTime().toString() : "";
 
         XMLGregorianCalendar startT = info.getStartTime();
         String startTime = startT != null
-                ? startT.toGregorianCalendar().getTime().toString()
-                : "";
+                ? startT.toGregorianCalendar().getTime().toString() : "";
 
         XMLGregorianCalendar completeT = info.getCompleteTime();
         String completeTime = completeT != null
-                ? completeT.toGregorianCalendar().getTime().toString()
-                : "";
+                ? completeT.toGregorianCalendar().getTime().toString() : "";
 
         LOG.debug("Save task info key: " + info.getKey() + " name: "
                 + info.getName() + " target: " + info.getEntityName()

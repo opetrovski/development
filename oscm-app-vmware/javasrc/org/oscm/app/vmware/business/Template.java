@@ -166,7 +166,7 @@ public class Template {
         String targetFolder = paramHandler.getTargetFolder();
         ManagedObjectReference moRefTargetFolder = null;
 
-        if (targetFolder != null) {
+        if (targetFolder != null && targetFolder.trim().length() > 0) {
             moRefTargetFolder = vmw.getServiceUtil().getDecendentMoRef(null,
                     "Folder", targetFolder);
         } else {
